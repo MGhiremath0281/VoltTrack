@@ -1,7 +1,7 @@
 package com.volttrack.volttrack.service;
 
-import com.volttrack.volttrack.dto.UserRequestDto;
-import com.volttrack.volttrack.dto.UserResponseDto;
+import com.volttrack.volttrack.dto.user.UserRequestDto;
+import com.volttrack.volttrack.dto.user.UserResponseDto;
 
 import java.util.List;
 
