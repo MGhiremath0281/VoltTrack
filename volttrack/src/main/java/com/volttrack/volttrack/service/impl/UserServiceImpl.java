@@ -1,12 +1,15 @@
 package com.volttrack.volttrack.service.impl;
 
+import com.volttrack.volttrack.dto.user.UserRequestDto;
+import com.volttrack.volttrack.dto.user.UserResponseDto;
+import com.volttrack.volttrack.entity.Role;
 import com.volttrack.volttrack.entity.User;
 import com.volttrack.volttrack.repository.UserRepository;
 import com.volttrack.volttrack.service.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -18,13 +21,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public UserResponseDto createUser(UserRequestDto requestDto) {
+        User user = User.builder()
+                .username(requestDto.getUsername())
+                .email(requestDto.getEmail())
+                .password(requestDto.getPassword())
+                .role(Role.valueOf(requestDto.getRole().toUpperCase()))
+                .build();
+
+        User saved = userRepository.save(user);
+        return toResponseDto(saved);
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponseDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserResponseDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return toResponseDto(user);
     }
 
     @Override
@@ -32,9 +52,12 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
-    @Override
-    public User getUserById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        return user.orElse(null); 
+    private UserResponseDto toResponseDto(User user) {
+        return UserResponseDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
     }
 }

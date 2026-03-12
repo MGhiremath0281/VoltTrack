@@ -1,15 +1,13 @@
 package com.volttrack.volttrack.service;
 
-import com.volttrack.volttrack.entity.User;
+import com.volttrack.volttrack.dto.UserRequestDto;
+import com.volttrack.volttrack.dto.UserResponseDto;
+
 import java.util.List;
 
 public interface UserService {
-
-    User createUser(User user);
-
-    List<User> getAllUsers();
-
+    UserResponseDto createUser(UserRequestDto requestDto);
+    List<UserResponseDto> getAllUsers();
+    UserResponseDto getUserById(Long id);
     void deleteUser(Long id);
-
-    User getUserById(Long id);
 }
