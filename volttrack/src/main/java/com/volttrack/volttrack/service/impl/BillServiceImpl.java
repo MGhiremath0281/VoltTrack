@@ -1,5 +1,6 @@
 package com.volttrack.volttrack.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -7,17 +8,16 @@ import org.springframework.stereotype.Service;
 
 import com.volttrack.volttrack.dto.bill.BillRequestDto;
 import com.volttrack.volttrack.dto.bill.BillResponseDto;
-
 import com.volttrack.volttrack.entity.Bill;
 import com.volttrack.volttrack.entity.Meter;
+import com.volttrack.volttrack.entity.MeterReading;
 import com.volttrack.volttrack.entity.User;
 import com.volttrack.volttrack.entity.BillingCycle;
 import com.volttrack.volttrack.entity.BillStatus;
-
 import com.volttrack.volttrack.repository.BillRepository;
 import com.volttrack.volttrack.repository.MeterRepository;
 import com.volttrack.volttrack.repository.UserRepository;
-
+import com.volttrack.volttrack.repository.MeterReadingRepository;
 import com.volttrack.volttrack.service.BillService;
 
 @Service
@@ -26,38 +26,61 @@ public class BillServiceImpl implements BillService {
     private final BillRepository billRepository;
     private final MeterRepository meterRepository;
     private final UserRepository userRepository;
+    private final MeterReadingRepository meterReadingRepository;
 
     public BillServiceImpl(BillRepository billRepository,
                            MeterRepository meterRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           MeterReadingRepository meterReadingRepository) {
         this.billRepository = billRepository;
         this.meterRepository = meterRepository;
         this.userRepository = userRepository;
+        this.meterReadingRepository = meterReadingRepository;
     }
 
     @Override
     public BillResponseDto createBill(BillRequestDto requestDto) {
         Meter meter = meterRepository.findById(requestDto.getMeterId())
                 .orElseThrow(() -> new RuntimeException("Meter not found"));
-        User consumer = userRepository.findById(requestDto.getConsumerId())
-                .orElseThrow(() -> new RuntimeException("Consumer not found"));
+        User consumer = meter.getUser(); // meter already linked to user
+
+        // Fetch earliest and latest readings for this meter
+        MeterReading opening = meterReadingRepository
+                .findTopByMeter_IdOrderByTimestampAsc(meter.getId())
+                .orElseThrow(() -> new RuntimeException("No readings found"));
+
+        MeterReading closing = meterReadingRepository
+                .findTopByMeter_IdOrderByTimestampDesc(meter.getId())
+                .orElseThrow(() -> new RuntimeException("No readings found"));
+
+        Double openingReading = opening.getUnitsConsumed();
+        Double closingReading = closing.getUnitsConsumed();
+        Double unitsConsumed = closingReading - openingReading;
+
+        // Calculate amounts (example tariff logic)
+        Double baseAmount = unitsConsumed * 5.0;
+        Double fixedCharges = 50.0;
+        Double taxAmount = baseAmount * 0.1;
+        Double totalAmount = baseAmount + fixedCharges + taxAmount;
+
+        LocalDateTime now = LocalDateTime.now();
 
         Bill bill = Bill.builder()
                 .meter(meter)
                 .consumer(consumer)
-                .billingCycle(BillingCycle.valueOf(requestDto.getBillingCycle().toUpperCase()))
-                .cycleStartDate(requestDto.getCycleStartDate())
-                .cycleEndDate(requestDto.getCycleEndDate())
-                .openingReading(requestDto.getOpeningReading())
-                .closingReading(requestDto.getClosingReading())
-                .unitsConsumed(requestDto.getUnitsConsumed())
-                .baseAmount(requestDto.getBaseAmount())
-                .fixedCharges(requestDto.getFixedCharges())
-                .taxAmount(requestDto.getTaxAmount())
-                .totalAmount(requestDto.getTotalAmount())
-                .status(BillStatus.valueOf(requestDto.getStatus().toUpperCase()))
-                .generatedAt(requestDto.getGeneratedAt())
-                .dueDate(requestDto.getDueDate())
+                .billingCycle(BillingCycle.MONTHLY)
+                .cycleStartDate(now.withDayOfMonth(1))
+                .cycleEndDate(now.withDayOfMonth(now.toLocalDate().lengthOfMonth()))
+                .openingReading(openingReading)
+                .closingReading(closingReading)
+                .unitsConsumed(unitsConsumed)
+                .baseAmount(baseAmount)
+                .fixedCharges(fixedCharges)
+                .taxAmount(taxAmount)
+                .totalAmount(totalAmount)
+                .status(BillStatus.UNPAID)
+                .generatedAt(now)
+                .dueDate(now.plusDays(15))
                 .build();
 
         Bill saved = billRepository.save(bill);
