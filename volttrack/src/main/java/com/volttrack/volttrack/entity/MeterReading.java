@@ -7,18 +7,19 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "meter_readings")
-@Data                 
-@NoArgsConstructor     
-@AllArgsConstructor   
-@Builder                
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class MeterReading {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String meterId;
+    @ManyToOne(fetch = FetchType.LAZY)   
+    @JoinColumn(name = "meter_id", nullable = false)
+    private Meter meter;
 
     @Column(nullable = false)
     private Integer pulseCount;

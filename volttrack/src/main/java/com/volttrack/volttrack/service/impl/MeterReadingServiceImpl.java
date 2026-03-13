@@ -1,8 +1,10 @@
 package com.volttrack.volttrack.service.impl;
 
 import com.volttrack.volttrack.dto.meter.MeterReadingDTO;
+import com.volttrack.volttrack.entity.Meter;
 import com.volttrack.volttrack.entity.MeterReading;
 import com.volttrack.volttrack.repository.MeterReadingRepository;
+import com.volttrack.volttrack.repository.MeterRepository;
 import com.volttrack.volttrack.service.MeterReadingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,13 +16,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MeterReadingServiceImpl implements MeterReadingService {
 
-    private final MeterReadingRepository repository;
+    private final MeterReadingRepository meterReadingRepository;
+    private final MeterRepository meterRepository;
 
     @Override
     public MeterReadingDTO saveReading(MeterReadingDTO dto) {
+        Meter meter = meterRepository.findById(dto.getMeterId())
+                .orElseThrow(() -> new RuntimeException("Meter not found with id: " + dto.getMeterId()));
+
         MeterReading entity = MeterReading.builder()
                 .id(dto.getId())
-                .meterId(dto.getMeterId())
+                .meter(meter)
                 .pulseCount(dto.getPulseCount())
                 .voltage(dto.getVoltage())
                 .current(dto.getCurrent())
@@ -28,20 +34,20 @@ public class MeterReadingServiceImpl implements MeterReadingService {
                 .timestamp(dto.getTimestamp())
                 .build();
 
-        MeterReading saved = repository.save(entity);
+        MeterReading saved = meterReadingRepository.save(entity);
         return toDTO(saved);
     }
 
     @Override
     public MeterReadingDTO getReadingById(Long id) {
-        return repository.findById(id)
+        return meterReadingRepository.findById(id)
                 .map(this::toDTO)
                 .orElse(null);
     }
 
     @Override
     public List<MeterReadingDTO> getAllReadings() {
-        return repository.findAll()
+        return meterReadingRepository.findAll()
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -49,13 +55,14 @@ public class MeterReadingServiceImpl implements MeterReadingService {
 
     @Override
     public void deleteReading(Long id) {
-        repository.deleteById(id);
+        meterReadingRepository.deleteById(id);
     }
 
+    // --- Helper method to convert entity -> DTO ---
     private MeterReadingDTO toDTO(MeterReading entity) {
         return MeterReadingDTO.builder()
                 .id(entity.getId())
-                .meterId(entity.getMeterId())
+                .meterId(entity.getMeter().getId())
                 .pulseCount(entity.getPulseCount())
                 .voltage(entity.getVoltage())
                 .current(entity.getCurrent())

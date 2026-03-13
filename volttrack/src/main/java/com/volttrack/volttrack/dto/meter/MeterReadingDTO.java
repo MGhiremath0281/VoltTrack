@@ -1,7 +1,6 @@
 package com.volttrack.volttrack.dto.meter;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Data
@@ -10,7 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 public class MeterReadingDTO {
     private Long id;
-    private String meterId;
+    private Long meterId;        
     private Integer pulseCount;
     private Double voltage;
     private Double current;
