@@ -27,6 +27,7 @@ public class UserServiceImpl implements UserService {
                 .email(requestDto.getEmail())
                 .password(requestDto.getPassword())
                 .role(Role.valueOf(requestDto.getRole().toUpperCase()))
+                .active(requestDto.getActive() != null ? requestDto.getActive() : true)
                 .build();
 
         User saved = userRepository.save(user);
@@ -58,6 +59,7 @@ public class UserServiceImpl implements UserService {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .active(user.getActive()) 
                 .build();
     }
 }
