@@ -1,7 +1,10 @@
 package com.volttrack.volttrack.dto.meter;
 
+
 import com.volttrack.volttrack.entity.Status;
 import com.volttrack.volttrack.entity.Billing;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Getter
@@ -10,9 +13,17 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class MeterRequestDto {
+    @NotBlank(message = "Meter ID is required")
     private String meterId;
+
+    @NotBlank(message = "Location is required")
     private String location;
+
+    @NotNull(message = "User ID is required")
     private Long userId;
+
+    @NotNull(message = "Status is required")
     private Status status;
+
     private Billing billing;
 }
