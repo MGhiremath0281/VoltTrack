@@ -14,6 +14,8 @@ import com.volttrack.volttrack.entity.MeterReading;
 import com.volttrack.volttrack.entity.User;
 import com.volttrack.volttrack.entity.BillingCycle;
 import com.volttrack.volttrack.entity.BillStatus;
+import com.volttrack.volttrack.exception.ResourceNotFoundException;   
+import com.volttrack.volttrack.exception.BillingException;          
 import com.volttrack.volttrack.repository.BillRepository;
 import com.volttrack.volttrack.repository.MeterRepository;
 import com.volttrack.volttrack.repository.UserRepository;
@@ -41,20 +43,25 @@ public class BillServiceImpl implements BillService {
     @Override
     public BillResponseDto createBill(BillRequestDto requestDto) {
         Meter meter = meterRepository.findById(requestDto.getMeterId())
-                .orElseThrow(() -> new RuntimeException("Meter not found"));
-        User consumer = meter.getUser(); // meter already linked to user
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + requestDto.getMeterId()));
+        User consumer = meter.getUser();
 
         // Fetch earliest and latest readings for this meter
         MeterReading opening = meterReadingRepository
                 .findTopByMeter_IdOrderByTimestampAsc(meter.getId())
-                .orElseThrow(() -> new RuntimeException("No readings found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No readings found for meter id: " + meter.getId()));
 
         MeterReading closing = meterReadingRepository
                 .findTopByMeter_IdOrderByTimestampDesc(meter.getId())
-                .orElseThrow(() -> new RuntimeException("No readings found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No readings found for meter id: " + meter.getId()));
 
         Double openingReading = opening.getUnitsConsumed();
         Double closingReading = closing.getUnitsConsumed();
+
+        if (closingReading < openingReading) {
+            throw new BillingException("Closing reading cannot be less than opening reading for meter id: " + meter.getId());
+        }
+
         Double unitsConsumed = closingReading - openingReading;
 
         // Calculate amounts (example tariff logic)
@@ -97,12 +104,15 @@ public class BillServiceImpl implements BillService {
     @Override
     public BillResponseDto getBillById(Long id) {
         Bill bill = billRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bill not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + id));
         return toResponseDto(bill);
     }
 
     @Override
     public void deleteBill(Long id) {
+        if (!billRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Cannot delete. Bill not found with id: " + id);
+        }
         billRepository.deleteById(id);
     }
 
