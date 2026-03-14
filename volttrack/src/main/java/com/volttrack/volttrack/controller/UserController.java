@@ -3,6 +3,7 @@ package com.volttrack.volttrack.controller;
 import com.volttrack.volttrack.dto.user.UserRequestDto;
 import com.volttrack.volttrack.dto.user.UserResponseDto;
 import com.volttrack.volttrack.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@RequestBody UserRequestDto requestDto) {
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto requestDto) {
         return ResponseEntity.ok(userService.createUser(requestDto));
     }
 

@@ -3,6 +3,8 @@ package com.volttrack.volttrack.controller;
 import com.volttrack.volttrack.dto.alert.AlertRequestDto;
 import com.volttrack.volttrack.dto.alert.AlertResponseDto;
 import com.volttrack.volttrack.service.AlertService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,22 +20,24 @@ public class AlertController {
     }
 
     @PostMapping
-    public AlertResponseDto createAlert(@RequestBody AlertRequestDto requestDto) {
-        return alertService.createAlert(requestDto);
+    public ResponseEntity<AlertResponseDto> createAlert(@Valid @RequestBody AlertRequestDto requestDto) {
+        AlertResponseDto saved = alertService.createAlert(requestDto);
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping
-    public List<AlertResponseDto> getAllAlerts() {
-        return alertService.getAllAlerts();
+    public ResponseEntity<List<AlertResponseDto>> getAllAlerts() {
+        return ResponseEntity.ok(alertService.getAllAlerts());
     }
 
     @GetMapping("/{id}")
-    public AlertResponseDto getAlertById(@PathVariable Long id) {
-        return alertService.getAlertById(id);
+    public ResponseEntity<AlertResponseDto> getAlertById(@PathVariable Long id) {
+        return ResponseEntity.ok(alertService.getAlertById(id));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteAlert(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAlert(@PathVariable Long id) {
         alertService.deleteAlert(id);
+        return ResponseEntity.noContent().build();
     }
 }

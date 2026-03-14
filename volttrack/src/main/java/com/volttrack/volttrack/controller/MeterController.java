@@ -3,6 +3,7 @@ package com.volttrack.volttrack.controller;
 import com.volttrack.volttrack.dto.meter.MeterRequestDto;
 import com.volttrack.volttrack.dto.meter.MeterResponseDto;
 import com.volttrack.volttrack.service.MeterService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class MeterController {
     }
 
     @PostMapping
-    public ResponseEntity<MeterResponseDto> createMeter(@RequestBody MeterRequestDto requestDto) {
+    public ResponseEntity<MeterResponseDto> createMeter(@Valid @RequestBody MeterRequestDto requestDto) {
         return ResponseEntity.ok(meterService.createMeter(requestDto));
     }
 

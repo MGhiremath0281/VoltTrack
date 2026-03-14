@@ -108,4 +108,6 @@ public class GlobalExceptionHandling {
 
         return ResponseEntity.status(status).body(error);
     }
+
+    
 }

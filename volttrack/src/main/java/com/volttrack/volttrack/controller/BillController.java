@@ -2,6 +2,8 @@ package com.volttrack.volttrack.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.volttrack.volttrack.dto.bill.BillRequestDto;
@@ -19,22 +21,24 @@ public class BillController {
     }
 
     @PostMapping
-    public BillResponseDto createBill(@RequestBody BillRequestDto requestDto) {
-        return billService.createBill(requestDto);
+    public ResponseEntity<BillResponseDto> createBill(@Valid @RequestBody BillRequestDto requestDto) {
+        BillResponseDto saved = billService.createBill(requestDto);
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping
-    public List<BillResponseDto> getAllBills() {
-        return billService.getAllBills();
+    public ResponseEntity<List<BillResponseDto>> getAllBills() {
+        return ResponseEntity.ok(billService.getAllBills());
     }
 
     @GetMapping("/{id}")
-    public BillResponseDto getBillById(@PathVariable Long id) {
-        return billService.getBillById(id);
+    public ResponseEntity<BillResponseDto> getBillById(@PathVariable Long id) {
+        return ResponseEntity.ok(billService.getBillById(id));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteBill(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBill(@PathVariable Long id) {
         billService.deleteBill(id);
+        return ResponseEntity.noContent().build();
     }
 }

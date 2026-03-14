@@ -2,6 +2,7 @@ package com.volttrack.volttrack.controller;
 
 import com.volttrack.volttrack.dto.meter.MeterReadingDTO;
 import com.volttrack.volttrack.service.MeterReadingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,13 +11,17 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/meter-readings")
-@RequiredArgsConstructor
+
 public class MeterReadingController {
 
     private final MeterReadingService meterReadingService;
 
+    public MeterReadingController(MeterReadingService meterReadingService) {
+        this.meterReadingService = meterReadingService;
+    }
+
     @PostMapping
-    public ResponseEntity<MeterReadingDTO> createReading(@RequestBody MeterReadingDTO dto) {
+    public ResponseEntity<MeterReadingDTO> createReading(@Valid @RequestBody MeterReadingDTO dto) {
         MeterReadingDTO saved = meterReadingService.saveReading(dto);
         return ResponseEntity.ok(saved);
     }
