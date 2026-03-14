@@ -1,18 +1,22 @@
 package com.volttrack.volttrack.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.volttrack.volttrack.dto.user.UserRequestDto;
 import com.volttrack.volttrack.dto.user.UserResponseDto;
 import com.volttrack.volttrack.entity.Role;
 import com.volttrack.volttrack.entity.User;
-import com.volttrack.volttrack.exception.ResourceNotFoundException; 
+import com.volttrack.volttrack.exception.ResourceNotFoundException;
 import com.volttrack.volttrack.repository.UserRepository;
 import com.volttrack.volttrack.service.UserService;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -23,6 +27,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto createUser(UserRequestDto requestDto) {
+        log.info("Creating new user with username={} and email={}", requestDto.getUsername(), requestDto.getEmail());
+
         User user = User.builder()
                 .username(requestDto.getUsername())
                 .email(requestDto.getEmail())
@@ -32,11 +38,14 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User saved = userRepository.save(user);
+        log.info("User created successfully with id={}", saved.getId());
+
         return toResponseDto(saved);
     }
 
     @Override
     public List<UserResponseDto> getAllUsers() {
+        log.debug("Fetching all users from repository");
         return userRepository.findAll().stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
@@ -44,17 +53,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto getUserById(Long id) {
+        log.info("Fetching user with id={}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> {
+                    log.error("User not found with id={}", id);
+                    return new ResourceNotFoundException("User not found with id: " + id);
+                });
+        log.info("User found with id={}", id);
         return toResponseDto(user);
     }
 
     @Override
     public void deleteUser(Long id) {
+        log.info("Deleting user with id={}", id);
         if (!userRepository.existsById(id)) {
+            log.error("Cannot delete. User not found with id={}", id);
             throw new ResourceNotFoundException("Cannot delete. User not found with id: " + id);
         }
         userRepository.deleteById(id);
+        log.info("User deleted successfully with id={}", id);
     }
 
     private UserResponseDto toResponseDto(User user) {
