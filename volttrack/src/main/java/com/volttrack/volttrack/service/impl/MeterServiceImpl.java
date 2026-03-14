@@ -4,6 +4,7 @@ import com.volttrack.volttrack.dto.meter.MeterRequestDto;
 import com.volttrack.volttrack.dto.meter.MeterResponseDto;
 import com.volttrack.volttrack.entity.Meter;
 import com.volttrack.volttrack.entity.User;
+import com.volttrack.volttrack.exception.ResourceNotFoundException; 
 import com.volttrack.volttrack.repository.MeterRepository;
 import com.volttrack.volttrack.repository.UserRepository;
 import com.volttrack.volttrack.service.MeterService;
@@ -26,7 +27,7 @@ public class MeterServiceImpl implements MeterService {
     @Override
     public MeterResponseDto createMeter(MeterRequestDto requestDto) {
         User user = userRepository.findById(requestDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + requestDto.getUserId()));
 
         Meter meter = Meter.builder()
                 .meterId(requestDto.getMeterId())
@@ -50,12 +51,15 @@ public class MeterServiceImpl implements MeterService {
     @Override
     public MeterResponseDto getMeterById(Long id) {
         Meter meter = meterRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Meter not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + id));
         return toResponseDto(meter);
     }
 
     @Override
     public void deleteMeter(Long id) {
+        if (!meterRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Cannot delete. Meter not found with id: " + id);
+        }
         meterRepository.deleteById(id);
     }
 
