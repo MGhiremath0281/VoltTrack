@@ -1,4 +1,15 @@
+# Environment variables
 .env
+
+# Build output
 target/
+
+# IDE files
 .idea/
+
+# Compiled classes
 *.class
+
+# Log files
+logs/
+*.log
