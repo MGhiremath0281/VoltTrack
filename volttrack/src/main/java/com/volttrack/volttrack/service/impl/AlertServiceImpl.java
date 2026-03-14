@@ -4,6 +4,7 @@ import com.volttrack.volttrack.dto.alert.AlertRequestDto;
 import com.volttrack.volttrack.dto.alert.AlertResponseDto;
 import com.volttrack.volttrack.entity.Alert;
 import com.volttrack.volttrack.entity.Meter;
+import com.volttrack.volttrack.exception.ResourceNotFoundException;
 import com.volttrack.volttrack.repository.AlertRepository;
 import com.volttrack.volttrack.repository.MeterRepository;
 import com.volttrack.volttrack.service.AlertService;
@@ -26,7 +27,7 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public AlertResponseDto createAlert(AlertRequestDto requestDto) {
         Meter meter = meterRepository.findById(requestDto.getMeterId())
-                .orElseThrow(() -> new RuntimeException("Meter not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + requestDto.getMeterId()));
 
         Alert alert = Alert.builder()
                 .meter(meter)
@@ -49,12 +50,15 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public AlertResponseDto getAlertById(Long id) {
         Alert alert = alertRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Alert not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alert not found with id: " + id));
         return toResponseDto(alert);
     }
 
     @Override
     public void deleteAlert(Long id) {
+        if (!alertRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Cannot delete. Alert not found with id: " + id);
+        }
         alertRepository.deleteById(id);
     }
 
