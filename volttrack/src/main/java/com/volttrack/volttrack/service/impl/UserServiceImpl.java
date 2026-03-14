@@ -4,6 +4,7 @@ import com.volttrack.volttrack.dto.user.UserRequestDto;
 import com.volttrack.volttrack.dto.user.UserResponseDto;
 import com.volttrack.volttrack.entity.Role;
 import com.volttrack.volttrack.entity.User;
+import com.volttrack.volttrack.exception.ResourceNotFoundException; 
 import com.volttrack.volttrack.repository.UserRepository;
 import com.volttrack.volttrack.service.UserService;
 import org.springframework.stereotype.Service;
@@ -44,12 +45,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         return toResponseDto(user);
     }
 
     @Override
     public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Cannot delete. User not found with id: " + id);
+        }
         userRepository.deleteById(id);
     }
 
@@ -59,7 +63,7 @@ public class UserServiceImpl implements UserService {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole().name())
-                .active(user.getActive()) 
+                .active(user.getActive())
                 .build();
     }
 }
