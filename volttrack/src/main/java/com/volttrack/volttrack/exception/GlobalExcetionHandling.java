@@ -1,4 +1,4 @@
-package com.volttrack.volttrack.config;
+package com.volttrack.volttrack.exception;
 
 public class GlobalExcetionHandling {
     
