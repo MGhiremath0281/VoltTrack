@@ -1,5 +1,10 @@
 package com.volttrack.volttrack.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.volttrack.volttrack.dto.alert.AlertRequestDto;
 import com.volttrack.volttrack.dto.alert.AlertResponseDto;
 import com.volttrack.volttrack.entity.Alert;
@@ -8,12 +13,11 @@ import com.volttrack.volttrack.exception.ResourceNotFoundException;
 import com.volttrack.volttrack.repository.AlertRepository;
 import com.volttrack.volttrack.repository.MeterRepository;
 import com.volttrack.volttrack.service.AlertService;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class AlertServiceImpl implements AlertService {
 
     private final AlertRepository alertRepository;
@@ -26,8 +30,13 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public AlertResponseDto createAlert(AlertRequestDto requestDto) {
+        log.info("Creating alert for meterId={} with type={}", requestDto.getMeterId(), requestDto.getAlertType());
+
         Meter meter = meterRepository.findById(requestDto.getMeterId())
-                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + requestDto.getMeterId()));
+                .orElseThrow(() -> {
+                    log.error("Meter not found with id={}", requestDto.getMeterId());
+                    return new ResourceNotFoundException("Meter not found with id: " + requestDto.getMeterId());
+                });
 
         Alert alert = Alert.builder()
                 .meter(meter)
@@ -37,11 +46,14 @@ public class AlertServiceImpl implements AlertService {
                 .build();
 
         Alert saved = alertRepository.save(alert);
+        log.info("Alert created successfully with id={}", saved.getId());
+
         return toResponseDto(saved);
     }
 
     @Override
     public List<AlertResponseDto> getAllAlerts() {
+        log.debug("Fetching all alerts from repository");
         return alertRepository.findAll().stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
@@ -49,17 +61,25 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public AlertResponseDto getAlertById(Long id) {
+        log.info("Fetching alert with id={}", id);
         Alert alert = alertRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Alert not found with id: " + id));
+                .orElseThrow(() -> {
+                    log.error("Alert not found with id={}", id);
+                    return new ResourceNotFoundException("Alert not found with id: " + id);
+                });
+        log.info("Alert found with id={}", id);
         return toResponseDto(alert);
     }
 
     @Override
     public void deleteAlert(Long id) {
+        log.info("Deleting alert with id={}", id);
         if (!alertRepository.existsById(id)) {
+            log.error("Cannot delete. Alert not found with id={}", id);
             throw new ResourceNotFoundException("Cannot delete. Alert not found with id: " + id);
         }
         alertRepository.deleteById(id);
+        log.info("Alert deleted successfully with id={}", id);
     }
 
     private AlertResponseDto toResponseDto(Alert alert) {
