@@ -3,6 +3,7 @@ package com.volttrack.volttrack.service.impl;
 import com.volttrack.volttrack.dto.meter.MeterReadingDTO;
 import com.volttrack.volttrack.entity.Meter;
 import com.volttrack.volttrack.entity.MeterReading;
+import com.volttrack.volttrack.exception.ResourceNotFoundException; // <-- custom exception
 import com.volttrack.volttrack.repository.MeterReadingRepository;
 import com.volttrack.volttrack.repository.MeterRepository;
 import com.volttrack.volttrack.service.MeterReadingService;
@@ -22,7 +23,7 @@ public class MeterReadingServiceImpl implements MeterReadingService {
     @Override
     public MeterReadingDTO saveReading(MeterReadingDTO dto) {
         Meter meter = meterRepository.findById(dto.getMeterId())
-                .orElseThrow(() -> new RuntimeException("Meter not found with id: " + dto.getMeterId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + dto.getMeterId()));
 
         MeterReading entity = MeterReading.builder()
                 .id(dto.getId())
@@ -40,9 +41,9 @@ public class MeterReadingServiceImpl implements MeterReadingService {
 
     @Override
     public MeterReadingDTO getReadingById(Long id) {
-        return meterReadingRepository.findById(id)
-                .map(this::toDTO)
-                .orElse(null);
+        MeterReading reading = meterReadingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Meter reading not found with id: " + id));
+        return toDTO(reading);
     }
 
     @Override
@@ -55,6 +56,9 @@ public class MeterReadingServiceImpl implements MeterReadingService {
 
     @Override
     public void deleteReading(Long id) {
+        if (!meterReadingRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Cannot delete. Meter reading not found with id: " + id);
+        }
         meterReadingRepository.deleteById(id);
     }
 
