@@ -6,7 +6,8 @@ import com.volttrack.volttrack.service.AlertService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @RestController
@@ -26,8 +27,8 @@ public class AlertController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AlertResponseDto>> getAllAlerts() {
-        return ResponseEntity.ok(alertService.getAllAlerts());
+    public ResponseEntity<Page<AlertResponseDto>> getAllAlerts(Pageable pageable) {
+        return ResponseEntity.ok(alertService.getAllAlerts(pageable));
     }
 
     @GetMapping("/{id}")

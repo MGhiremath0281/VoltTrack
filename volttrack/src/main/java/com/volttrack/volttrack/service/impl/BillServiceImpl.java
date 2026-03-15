@@ -3,7 +3,8 @@ package com.volttrack.volttrack.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.volttrack.volttrack.dto.bill.BillRequestDto;
@@ -111,11 +112,10 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public List<BillResponseDto> getAllBills() {
-        log.debug("Fetching all bills from repository");
-        return billRepository.findAll().stream()
-                .map(this::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<BillResponseDto> getAllBills(Pageable pageable) {
+        log.debug("Fetching all bills with pagination");
+        return billRepository.findAll(pageable)
+                .map(this::toResponseDto);
     }
 
     @Override

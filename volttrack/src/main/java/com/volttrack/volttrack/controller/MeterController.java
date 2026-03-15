@@ -6,7 +6,8 @@ import com.volttrack.volttrack.service.MeterService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @RestController
@@ -25,8 +26,8 @@ public class MeterController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MeterResponseDto>> getAllMeters() {
-        return ResponseEntity.ok(meterService.getAllMeters());
+    public ResponseEntity<Page<MeterResponseDto>> getAllMeters(Pageable pageable) {
+        return ResponseEntity.ok(meterService.getAllMeters(pageable));
     }
 
     @GetMapping("/{id}")

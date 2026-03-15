@@ -2,7 +2,8 @@ package com.volttrack.volttrack.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.volttrack.volttrack.dto.meter.MeterRequestDto;
@@ -53,11 +54,10 @@ public class MeterServiceImpl implements MeterService {
     }
 
     @Override
-    public List<MeterResponseDto> getAllMeters() {
-        log.debug("Fetching all meters from repository");
-        return meterRepository.findAll().stream()
-                .map(this::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<MeterResponseDto> getAllMeters(Pageable pageable) {
+        log.debug("Fetching all meters with pagination");
+        return meterRepository.findAll(pageable)
+                .map(this::toResponseDto);
     }
 
     @Override

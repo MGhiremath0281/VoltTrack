@@ -3,7 +3,8 @@ package com.volttrack.volttrack.controller;
 import com.volttrack.volttrack.dto.meter.MeterReadingDTO;
 import com.volttrack.volttrack.service.MeterReadingService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,9 +34,8 @@ public class MeterReadingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MeterReadingDTO>> getAllReadings() {
-        List<MeterReadingDTO> readings = meterReadingService.getAllReadings();
-        return ResponseEntity.ok(readings);
+    public ResponseEntity<Page<MeterReadingDTO>> getAllReadings(Pageable pageable) {
+        return ResponseEntity.ok(meterReadingService.getAllReadings(pageable));
     }
 
     @DeleteMapping("/{id}")

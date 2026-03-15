@@ -1,8 +1,7 @@
 package com.volttrack.volttrack.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.volttrack.volttrack.dto.alert.AlertRequestDto;
@@ -52,11 +51,10 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<AlertResponseDto> getAllAlerts() {
-        log.debug("Fetching all alerts from repository");
-        return alertRepository.findAll().stream()
-                .map(this::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<AlertResponseDto> getAllAlerts(Pageable pageable) {
+        log.debug("Fetching all alerts with pagination");
+        return alertRepository.findAll(pageable)
+                .map(this::toResponseDto);
     }
 
     @Override

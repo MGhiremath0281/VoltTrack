@@ -1,6 +1,8 @@
 package com.volttrack.volttrack.controller;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +29,8 @@ public class BillController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BillResponseDto>> getAllBills() {
-        return ResponseEntity.ok(billService.getAllBills());
+    public ResponseEntity<Page<BillResponseDto>> getAllBills(Pageable pageable) {
+        return ResponseEntity.ok(billService.getAllBills(pageable));
     }
 
     @GetMapping("/{id}")
