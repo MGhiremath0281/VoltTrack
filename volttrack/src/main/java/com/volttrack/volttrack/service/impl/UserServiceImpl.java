@@ -2,7 +2,8 @@ package com.volttrack.volttrack.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.volttrack.volttrack.dto.user.UserRequestDto;
@@ -44,12 +45,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponseDto> getAllUsers() {
-        log.debug("Fetching all users from repository");
-        return userRepository.findAll().stream()
-                .map(this::toResponseDto)
-                .collect(Collectors.toList());
-    }
+public Page<UserResponseDto> getAllUsers(Pageable pageable) {
+    log.debug("Fetching all users with pagination");
+    return userRepository.findAll(pageable)
+            .map(this::toResponseDto);
+}
 
     @Override
     public UserResponseDto getUserById(Long id) {

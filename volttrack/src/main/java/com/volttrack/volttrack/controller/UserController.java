@@ -4,10 +4,10 @@ import com.volttrack.volttrack.dto.user.UserRequestDto;
 import com.volttrack.volttrack.dto.user.UserResponseDto;
 import com.volttrack.volttrack.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -24,10 +24,11 @@ public class UserController {
         return ResponseEntity.ok(userService.createUser(requestDto));
     }
 
-    @GetMapping
-    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
+   @GetMapping
+public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable) {
+    return ResponseEntity.ok(userService.getAllUsers(pageable));
+}
+
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {

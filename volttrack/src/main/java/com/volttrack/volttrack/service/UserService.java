@@ -5,9 +5,12 @@ import com.volttrack.volttrack.dto.user.UserResponseDto;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface UserService {
     UserResponseDto createUser(UserRequestDto requestDto);
-    List<UserResponseDto> getAllUsers();
+    Page<UserResponseDto> getAllUsers(Pageable pageable);
     UserResponseDto getUserById(Long id);
     void deleteUser(Long id);
 }
