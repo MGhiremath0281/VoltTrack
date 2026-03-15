@@ -13,4 +13,6 @@ public interface UserService {
     Page<UserResponseDto> getAllUsers(Pageable pageable);
     UserResponseDto getUserById(Long id);
     void deleteUser(Long id);
+    UserResponseDto createConsumerActive(UserRequestDto requestDto);
+    Page<UserResponseDto> getConsumers(Pageable pageable);
 }

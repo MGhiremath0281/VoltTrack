@@ -11,4 +11,6 @@ public interface AlertService {
     Page<AlertResponseDto> getAllAlerts(Pageable pageable);
     AlertResponseDto getAlertById(Long id);
     void deleteAlert(Long id);
+    AlertResponseDto createAlertForConsumer(Long consumerId, AlertRequestDto requestDto);
+    Page<AlertResponseDto> getAlertsByConsumer(Long consumerId, Pageable pageable);
 }

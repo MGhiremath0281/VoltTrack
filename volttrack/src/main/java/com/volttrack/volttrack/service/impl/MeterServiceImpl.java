@@ -1,7 +1,8 @@
 package com.volttrack.volttrack.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.volttrack.volttrack.dto.meter.MeterRequestDto;
+
+import com.volttrack.volttrack.entity.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -82,6 +83,32 @@ public class MeterServiceImpl implements MeterService {
         meterRepository.deleteById(id);
         log.info("Meter deleted successfully with id={}", id);
     }
+
+    @Override
+    public MeterResponseDto assignMeterToConsumer(Long consumerId, MeterRequestDto requestDto) {
+        log.info("Assigning meter with meterId={} to consumerId={}", requestDto.getMeterId(), consumerId);
+
+        User consumer = userRepository.findById(consumerId)
+                .orElseThrow(() -> {
+                    log.error("Consumer not found with id={}", consumerId);
+                    return new ResourceNotFoundException("Consumer not found with id: " + consumerId);
+                });
+
+        Meter meter = Meter.builder()
+                .meterId(requestDto.getMeterId())
+                .location(requestDto.getLocation())
+                .user(consumer)
+                .status(Status.ONLINE)
+                .billing(requestDto.getBilling())
+                .build();
+
+        Meter saved = meterRepository.save(meter);
+        log.info("Meter assigned successfully with id={} to consumerId={}", saved.getId(), consumerId);
+
+        return toResponseDto(saved);
+    }
+
+
 
     private MeterResponseDto toResponseDto(Meter meter) {
         return MeterResponseDto.builder()

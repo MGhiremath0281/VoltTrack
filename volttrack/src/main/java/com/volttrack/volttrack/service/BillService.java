@@ -12,4 +12,6 @@ public interface BillService {
     Page<BillResponseDto> getAllBills(Pageable pageable);
     BillResponseDto getBillById(Long id);
     void deleteBill(Long id);
+    BillResponseDto generateBillForConsumer(Long consumerId);
+    Page<BillResponseDto> getBillsByConsumer(Long consumerId, Pageable pageable);
 }

@@ -75,6 +75,35 @@ public class UserServiceImpl implements UserService {
         log.info("User deleted successfully with id={}", id);
     }
 
+    @Override
+    public UserResponseDto createConsumerActive(UserRequestDto requestDto) {
+        log.info("Creating consumer with email={}", requestDto.getEmail());
+
+        if (userRepository.existsByEmail(requestDto.getEmail())) {
+            throw new IllegalArgumentException("Email already in use: " + requestDto.getEmail());
+        }
+
+        User consumer = User.builder()
+                .username(requestDto.getUsername())
+                .email(requestDto.getEmail())
+                .password(passwordEncoder.encode(requestDto.getPassword()))
+                .role(Role.CONSUMER)
+                .active(true)
+                .build();
+
+        User saved = userRepository.save(consumer);
+        log.info("Consumer created successfully with id={}", saved.getId());
+
+        return toResponseDto(saved);
+    }
+
+    @Override
+    public Page<UserResponseDto> getConsumers(Pageable pageable) {
+        log.debug("Fetching all consumers with pagination");
+        return userRepository.findByRole(Role.CONSUMER, pageable)
+                .map(this::toResponseDto);
+    }
+
     private UserResponseDto toResponseDto(User user) {
         return UserResponseDto.builder()
                 .id(user.getId())

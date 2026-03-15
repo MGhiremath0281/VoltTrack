@@ -1,8 +1,6 @@
 package com.volttrack.volttrack.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,37 +47,72 @@ public class BillServiceImpl implements BillService {
         log.info("Creating bill for meterId={}", requestDto.getMeterId());
 
         Meter meter = meterRepository.findById(requestDto.getMeterId())
-                .orElseThrow(() -> {
-                    log.error("Meter not found with id={}", requestDto.getMeterId());
-                    return new ResourceNotFoundException("Meter not found with id: " + requestDto.getMeterId());
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + requestDto.getMeterId()));
         User consumer = meter.getUser();
 
+        return generateBill(meter, consumer);
+    }
+
+    @Override
+    public Page<BillResponseDto> getAllBills(Pageable pageable) {
+        log.debug("Fetching all bills with pagination");
+        return billRepository.findAll(pageable).map(this::toResponseDto);
+    }
+
+    @Override
+    public BillResponseDto getBillById(Long id) {
+        log.info("Fetching bill with id={}", id);
+        Bill bill = billRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + id));
+        return toResponseDto(bill);
+    }
+
+    @Override
+    public void deleteBill(Long id) {
+        log.info("Deleting bill with id={}", id);
+        if (!billRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Cannot delete. Bill not found with id: " + id);
+        }
+        billRepository.deleteById(id);
+        log.info("Bill deleted successfully with id={}", id);
+    }
+
+    @Override
+    public BillResponseDto generateBillForConsumer(Long consumerId) {
+        log.info("Generating bill for consumerId={}", consumerId);
+
+        User consumer = userRepository.findById(consumerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with id: " + consumerId));
+
+        Meter meter = meterRepository.findByUser_Id(consumerId)
+                .orElseThrow(() -> new ResourceNotFoundException("No meter found for consumer id: " + consumerId));
+
+        return generateBill(meter, consumer);
+    }
+
+    @Override
+    public Page<BillResponseDto> getBillsByConsumer(Long consumerId, Pageable pageable) {
+        log.debug("Fetching bills for consumerId={}", consumerId);
+        return billRepository.findByConsumer_Id(consumerId, pageable).map(this::toResponseDto);
+    }
+
+    private BillResponseDto generateBill(Meter meter, User consumer) {
         MeterReading opening = meterReadingRepository
                 .findTopByMeter_IdOrderByTimestampAsc(meter.getId())
-                .orElseThrow(() -> {
-                    log.error("No readings found for meterId={}", meter.getId());
-                    return new ResourceNotFoundException("No readings found for meter id: " + meter.getId());
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("No readings found for meter id: " + meter.getId()));
 
         MeterReading closing = meterReadingRepository
                 .findTopByMeter_IdOrderByTimestampDesc(meter.getId())
-                .orElseThrow(() -> {
-                    log.error("No readings found for meterId={}", meter.getId());
-                    return new ResourceNotFoundException("No readings found for meter id: " + meter.getId());
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("No readings found for meter id: " + meter.getId()));
 
         Double openingReading = opening.getUnitsConsumed();
         Double closingReading = closing.getUnitsConsumed();
 
         if (closingReading < openingReading) {
-            log.error("Invalid readings: closing={} < opening={} for meterId={}", closingReading, openingReading, meter.getId());
             throw new BillingException("Closing reading cannot be less than opening reading for meter id: " + meter.getId());
         }
 
         Double unitsConsumed = closingReading - openingReading;
-        log.info("Units consumed for meterId={} is {}", meter.getId(), unitsConsumed);
-
         Double baseAmount = unitsConsumed * 5.0;
         Double fixedCharges = 50.0;
         Double taxAmount = baseAmount * 0.1;
@@ -106,39 +139,9 @@ public class BillServiceImpl implements BillService {
                 .build();
 
         Bill saved = billRepository.save(bill);
-        log.info("Bill created successfully with id={} for meterId={}", saved.getId(), meter.getId());
+        log.info("Bill generated successfully with id={} for consumerId={}", saved.getId(), consumer.getId());
 
         return toResponseDto(saved);
-    }
-
-    @Override
-    public Page<BillResponseDto> getAllBills(Pageable pageable) {
-        log.debug("Fetching all bills with pagination");
-        return billRepository.findAll(pageable)
-                .map(this::toResponseDto);
-    }
-
-    @Override
-    public BillResponseDto getBillById(Long id) {
-        log.info("Fetching bill with id={}", id);
-        Bill bill = billRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Bill not found with id={}", id);
-                    return new ResourceNotFoundException("Bill not found with id: " + id);
-                });
-        log.info("Bill found with id={}", id);
-        return toResponseDto(bill);
-    }
-
-    @Override
-    public void deleteBill(Long id) {
-        log.info("Deleting bill with id={}", id);
-        if (!billRepository.existsById(id)) {
-            log.error("Cannot delete. Bill not found with id={}", id);
-            throw new ResourceNotFoundException("Cannot delete. Bill not found with id: " + id);
-        }
-        billRepository.deleteById(id);
-        log.info("Bill deleted successfully with id={}", id);
     }
 
     private BillResponseDto toResponseDto(Bill bill) {
