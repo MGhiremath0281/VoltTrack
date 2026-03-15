@@ -1,9 +1,8 @@
 package com.volttrack.volttrack.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.volttrack.volttrack.dto.user.UserRequestDto;
@@ -21,9 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .username(requestDto.getUsername())
                 .email(requestDto.getEmail())
-                .password(requestDto.getPassword())
+                .password(passwordEncoder.encode(requestDto.getPassword()))
                 .role(Role.valueOf(requestDto.getRole().toUpperCase()))
                 .active(requestDto.getActive() != null ? requestDto.getActive() : true)
                 .build();
@@ -45,11 +46,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-public Page<UserResponseDto> getAllUsers(Pageable pageable) {
-    log.debug("Fetching all users with pagination");
-    return userRepository.findAll(pageable)
-            .map(this::toResponseDto);
-}
+    public Page<UserResponseDto> getAllUsers(Pageable pageable) {
+        log.debug("Fetching all users with pagination");
+        return userRepository.findAll(pageable)
+                .map(this::toResponseDto);
+    }
 
     @Override
     public UserResponseDto getUserById(Long id) {
