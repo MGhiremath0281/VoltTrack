@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,24 +21,27 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER')")
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto requestDto) {
         return ResponseEntity.ok(userService.createUser(requestDto));
     }
 
-   @GetMapping
-public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable) {
-    return ResponseEntity.ok(userService.getAllUsers(pageable));
-}
-
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','OFFICER')")
+    public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable) {
+        return ResponseEntity.ok(userService.getAllUsers(pageable));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER') or #userId == authentication.principal.id")
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+    @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
 }
