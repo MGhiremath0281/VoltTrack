@@ -36,24 +36,24 @@ public class AdminDashboardController {
         return ResponseEntity.ok(userService.getAllUsers(pageable));
     }
 
-    @Operation(summary = "Get user by ID", description = "Retrieve details of a specific user by their ID")
+    @Operation(summary = "Get user by publicId", description = "Retrieve details of a specific user by their publicId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @GetMapping("/users/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping("/users/{publicId}")
+    public ResponseEntity<UserResponseDto> getUserByPublicId(@PathVariable String publicId) {
+        return ResponseEntity.ok(userService.getUserByPublicId(publicId));
     }
 
-    @Operation(summary = "Delete user", description = "Delete a user by their ID")
+    @Operation(summary = "Delete user", description = "Delete a user by their publicId")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    @DeleteMapping("/users/{publicId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String publicId) {
+        userService.deleteUserByPublicId(publicId);
         return ResponseEntity.noContent().build();
     }
 
@@ -63,9 +63,9 @@ public class AdminDashboardController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - only ADMIN can approve"),
             @ApiResponse(responseCode = "404", description = "Officer not found")
     })
-    @PutMapping("/users/{id}/approve")
-    public ResponseEntity<UserResponseDto> approveOfficer(@PathVariable Long id) {
-        UserResponseDto approved = userService.approveOfficer(id);
+    @PutMapping("/users/{publicId}/approve")
+    public ResponseEntity<UserResponseDto> approveOfficer(@PathVariable String publicId) {
+        UserResponseDto approved = userService.approveOfficer(publicId);
         return ResponseEntity.ok(approved);
     }
 
@@ -75,16 +75,16 @@ public class AdminDashboardController {
         return ResponseEntity.ok(meterService.getAllMeters(pageable));
     }
 
-    @Operation(summary = "Get meter by ID", description = "Retrieve details of a specific meter by its ID")
-    @GetMapping("/meters/{id}")
-    public ResponseEntity<MeterResponseDto> getMeterById(@PathVariable Long id) {
-        return ResponseEntity.ok(meterService.getMeterById(id));
+    @Operation(summary = "Get meter by publicId", description = "Retrieve details of a specific meter by its publicId")
+    @GetMapping("/meters/{publicId}")
+    public ResponseEntity<MeterResponseDto> getMeterByPublicId(@PathVariable String publicId) {
+        return ResponseEntity.ok(meterService.getMeterByPublicId(publicId));
     }
 
-    @Operation(summary = "Delete meter", description = "Delete a meter by its ID")
-    @DeleteMapping("/meters/{id}")
-    public ResponseEntity<Void> deleteMeter(@PathVariable Long id) {
-        meterService.deleteMeter(id);
+    @Operation(summary = "Delete meter", description = "Delete a meter by its publicId")
+    @DeleteMapping("/meters/{publicId}")
+    public ResponseEntity<Void> deleteMeter(@PathVariable String publicId) {
+        meterService.deleteMeterByPublicId(publicId);
         return ResponseEntity.noContent().build();
     }
 
@@ -94,16 +94,16 @@ public class AdminDashboardController {
         return ResponseEntity.ok(billService.getAllBills(pageable));
     }
 
-    @Operation(summary = "Get bill by ID", description = "Retrieve details of a specific bill by its ID")
-    @GetMapping("/bills/{id}")
-    public ResponseEntity<BillResponseDto> getBillById(@PathVariable Long id) {
-        return ResponseEntity.ok(billService.getBillById(id));
+    @Operation(summary = "Get bill by publicId", description = "Retrieve details of a specific bill by its publicId")
+    @GetMapping("/bills/{publicId}")
+    public ResponseEntity<BillResponseDto> getBillByPublicId(@PathVariable String publicId) {
+        return ResponseEntity.ok(billService.getBillByPublicId(publicId));
     }
 
-    @Operation(summary = "Delete bill", description = "Delete a bill by its ID")
-    @DeleteMapping("/bills/{id}")
-    public ResponseEntity<Void> deleteBill(@PathVariable Long id) {
-        billService.deleteBill(id);
+    @Operation(summary = "Delete bill", description = "Delete a bill by its publicId")
+    @DeleteMapping("/bills/{publicId}")
+    public ResponseEntity<Void> deleteBill(@PathVariable String publicId) {
+        billService.deleteBillByPublicId(publicId);
         return ResponseEntity.noContent().build();
     }
 
@@ -113,16 +113,16 @@ public class AdminDashboardController {
         return ResponseEntity.ok(alertService.getAllAlerts(pageable));
     }
 
-    @Operation(summary = "Get alert by ID", description = "Retrieve details of a specific alert by its ID")
-    @GetMapping("/alerts/{id}")
-    public ResponseEntity<AlertResponseDto> getAlertById(@PathVariable Long id) {
-        return ResponseEntity.ok(alertService.getAlertById(id));
+    @Operation(summary = "Get alert by publicId", description = "Retrieve details of a specific alert by its publicId")
+    @GetMapping("/alerts/{publicId}")
+    public ResponseEntity<AlertResponseDto> getAlertByPublicId(@PathVariable String publicId) {
+        return ResponseEntity.ok(alertService.getAlertByPublicId(publicId));
     }
 
-    @Operation(summary = "Delete alert", description = "Delete an alert by its ID")
-    @DeleteMapping("/alerts/{id}")
-    public ResponseEntity<Void> deleteAlert(@PathVariable Long id) {
-        alertService.deleteAlert(id);
+    @Operation(summary = "Delete alert", description = "Delete an alert by its publicId")
+    @DeleteMapping("/alerts/{publicId}")
+    public ResponseEntity<Void> deleteAlert(@PathVariable String publicId) {
+        alertService.deleteAlertByPublicId(publicId);
         return ResponseEntity.noContent().build();
     }
 }
