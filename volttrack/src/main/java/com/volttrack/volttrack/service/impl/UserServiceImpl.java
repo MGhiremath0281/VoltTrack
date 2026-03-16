@@ -48,19 +48,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<UserResponseDto> getAllUsers(Pageable pageable) {
         log.debug("Fetching all users with pagination");
-        return userRepository.findAll(pageable)
-                .map(this::toResponseDto);
+        return userRepository.findAll(pageable).map(this::toResponseDto);
     }
 
     @Override
     public UserResponseDto getUserById(Long id) {
         log.info("Fetching user with id={}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("User not found with id={}", id);
-                    return new ResourceNotFoundException("User not found with id: " + id);
-                });
-        log.info("User found with id={}", id);
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         return toResponseDto(user);
     }
 
@@ -68,7 +63,6 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long id) {
         log.info("Deleting user with id={}", id);
         if (!userRepository.existsById(id)) {
-            log.error("Cannot delete. User not found with id={}", id);
             throw new ResourceNotFoundException("Cannot delete. User not found with id: " + id);
         }
         userRepository.deleteById(id);
@@ -100,8 +94,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<UserResponseDto> getConsumers(Pageable pageable) {
         log.debug("Fetching all consumers with pagination");
-        return userRepository.findByRole(Role.CONSUMER, pageable)
-                .map(this::toResponseDto);
+        return userRepository.findByRole(Role.CONSUMER, pageable).map(this::toResponseDto);
+    }
+
+    // 🔹 New method for approving officers
+    @Override
+    public UserResponseDto approveOfficer(Long id) {
+        log.info("Approving officer with id={}", id);
+
+        User officer = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Officer not found with id: " + id));
+
+        if (!officer.getRole().equals(Role.OFFICER)) {
+            throw new IllegalStateException("Only officers can be approved");
+        }
+
+        officer.setActive(true);
+        User saved = userRepository.save(officer);
+
+        log.info("Officer approved successfully with id={}", saved.getId());
+        return toResponseDto(saved);
     }
 
     private UserResponseDto toResponseDto(User user) {

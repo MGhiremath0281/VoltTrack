@@ -15,4 +15,5 @@ public interface UserService {
     void deleteUser(Long id);
     UserResponseDto createConsumerActive(UserRequestDto requestDto);
     Page<UserResponseDto> getConsumers(Pageable pageable);
+    UserResponseDto approveOfficer(Long id);
 }

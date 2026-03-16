@@ -101,4 +101,12 @@ public class AdminDashboardController {
         alertService.deleteAlert(id);
         return ResponseEntity.noContent().build();
     }
+    // In AdminDashboardController
+
+@PutMapping("/users/{id}/approve")
+public ResponseEntity<UserResponseDto> approveOfficer(@PathVariable Long id) {
+    UserResponseDto approved = userService.approveOfficer(id);
+    return ResponseEntity.ok(approved);
+}
+
 }
