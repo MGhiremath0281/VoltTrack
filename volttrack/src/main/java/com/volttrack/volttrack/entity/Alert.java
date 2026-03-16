@@ -17,6 +17,9 @@ public class Alert {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "public_id", unique = true, nullable = false)
+    private String publicId;
+
     // Relation to Meter
     @ManyToOne
     @JoinColumn(name = "meter_id", nullable = false)

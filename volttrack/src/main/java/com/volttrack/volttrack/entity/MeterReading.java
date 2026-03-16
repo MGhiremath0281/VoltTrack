@@ -2,9 +2,7 @@ package com.volttrack.volttrack.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "meter_readings")
 @Data
@@ -17,7 +15,11 @@ public class MeterReading {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)   
+    // External identifier with prefix
+    @Column(name = "public_id", unique = true, nullable = false)
+    private String publicId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meter_id", nullable = false)
     private Meter meter;
 

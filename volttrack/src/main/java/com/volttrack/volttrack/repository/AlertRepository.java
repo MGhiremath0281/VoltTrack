@@ -7,11 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, Long> {
 
     Page<Alert> findByMeter_User_Id(Long consumerId, Pageable pageable);
+    Optional<Alert> findByPublicId(String publicId);
 
     List<Alert> findByMeter_Id(Long meterId);
 

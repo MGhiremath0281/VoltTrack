@@ -14,4 +14,5 @@ public interface MeterReadingRepository extends JpaRepository<MeterReading, Long
 
     // Get the earliest reading for a meter (opening reading)
     Optional<MeterReading> findTopByMeter_IdOrderByTimestampAsc(Long meterId);
+    Optional<MeterReading> findByPublicId(String publicId);
 }

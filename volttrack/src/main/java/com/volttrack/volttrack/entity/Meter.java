@@ -1,11 +1,7 @@
 package com.volttrack.volttrack.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
@@ -19,8 +15,10 @@ public class Meter {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String meterId;
+    @Column(name = "public_id", unique = true, nullable = false)
+    private String publicId;
 
+    private String meterId;
     private String location;
 
     @ManyToOne

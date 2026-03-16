@@ -1,6 +1,7 @@
 package com.volttrack.volttrack.repository;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import com.volttrack.volttrack.entity.Bill;
@@ -13,4 +14,6 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
     Page<Bill> findByConsumer_Id(Long consumerId, Pageable pageable);
 
     List<Bill> findByMeter_Id(Long meterId);
+
+    Optional<Bill> findByPublicId(String publicId);
 }
