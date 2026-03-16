@@ -49,7 +49,7 @@ public class MeterController {
             @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
     @GetMapping("/{meterId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER') or #meterId == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER') or @meterSecurity.isOwner(#meterId, authentication)")
     public ResponseEntity<MeterResponseDto> getMeterById(@PathVariable Long meterId) {
         return ResponseEntity.ok(meterService.getMeterById(meterId));
     }
