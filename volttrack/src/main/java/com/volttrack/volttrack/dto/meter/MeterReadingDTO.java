@@ -2,10 +2,7 @@ package com.volttrack.volttrack.dto.meter;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 public class MeterReadingDTO {
     private Long id;
+    private String publicId;
 
     @NotNull(message = "Meter ID is required")
     private Long meterId;

@@ -18,6 +18,7 @@ import com.volttrack.volttrack.entity.Billing;
 @Builder
 public class BillResponseDto {
     private Long id;
+    private String publicId;
     private Long meterId;
     private Long consumerId;
     private String billingCycle;
@@ -34,3 +35,4 @@ public class BillResponseDto {
     private LocalDateTime generatedAt;
     private LocalDateTime dueDate;
 }
+

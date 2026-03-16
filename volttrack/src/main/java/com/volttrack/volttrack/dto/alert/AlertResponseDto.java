@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class AlertResponseDto {
     private Long id;
+    private String publicId;
     private Long meterId;
     private String alertType;
     private String message;

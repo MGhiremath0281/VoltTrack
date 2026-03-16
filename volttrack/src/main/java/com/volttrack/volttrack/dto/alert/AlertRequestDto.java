@@ -22,4 +22,6 @@ public class AlertRequestDto {
 
     @NotNull(message = "CreatedAt timestamp is required")
     private LocalDateTime createdAt;
+
+    private String publicId;
 }

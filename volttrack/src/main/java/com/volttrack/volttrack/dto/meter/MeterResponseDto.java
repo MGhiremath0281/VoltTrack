@@ -11,6 +11,7 @@ import lombok.*;
 @Builder
 public class MeterResponseDto {
     private Long id;
+    private String publicId;
     private String meterId;
     private String location;
     private Long userId;
