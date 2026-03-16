@@ -2,7 +2,6 @@ package com.volttrack.volttrack.service;
 
 import com.volttrack.volttrack.dto.alert.AlertRequestDto;
 import com.volttrack.volttrack.dto.alert.AlertResponseDto;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,6 +10,8 @@ public interface AlertService {
     Page<AlertResponseDto> getAllAlerts(Pageable pageable);
     AlertResponseDto getAlertById(Long id);
     void deleteAlert(Long id);
-    AlertResponseDto createAlertForConsumer(Long consumerId, AlertRequestDto requestDto);
-    Page<AlertResponseDto> getAlertsByConsumer(Long consumerId, Pageable pageable);
+
+    // Updated to use publicId
+    AlertResponseDto createAlertForConsumer(String consumerPublicId, AlertRequestDto requestDto);
+    Page<AlertResponseDto> getAlertsByConsumer(String consumerPublicId, Pageable pageable);
 }

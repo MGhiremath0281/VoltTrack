@@ -1,5 +1,6 @@
 package com.volttrack.volttrack.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,19 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AlertServiceImpl implements AlertService {
 
     private final AlertRepository alertRepository;
     private final MeterRepository meterRepository;
     private final UserRepository userRepository;
-
-    public AlertServiceImpl(AlertRepository alertRepository,
-                            MeterRepository meterRepository,
-                            UserRepository userRepository) {
-        this.alertRepository = alertRepository;
-        this.meterRepository = meterRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
     public AlertResponseDto createAlert(AlertRequestDto requestDto) {
@@ -78,14 +72,14 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public AlertResponseDto createAlertForConsumer(Long consumerId, AlertRequestDto requestDto) {
-        log.info("Creating alert for consumerId={} with type={}", consumerId, requestDto.getAlertType());
+    public AlertResponseDto createAlertForConsumer(String consumerPublicId, AlertRequestDto requestDto) {
+        log.info("Creating alert for consumerPublicId={} with type={}", consumerPublicId, requestDto.getAlertType());
 
-        User consumer = userRepository.findById(consumerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with id: " + consumerId));
+        User consumer = userRepository.findByPublicId(consumerPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
 
-        Meter meter = meterRepository.findByUser_Id(consumerId)
-                .orElseThrow(() -> new ResourceNotFoundException("No meter found for consumer id: " + consumerId));
+        Meter meter = meterRepository.findByUser_Id(consumer.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("No meter found for consumer publicId: " + consumerPublicId));
 
         Alert alert = Alert.builder()
                 .meter(meter)
@@ -95,15 +89,19 @@ public class AlertServiceImpl implements AlertService {
                 .build();
 
         Alert saved = alertRepository.save(alert);
-        log.info("Alert created successfully with id={} for consumerId={}", saved.getId(), consumerId);
+        log.info("Alert created successfully with id={} for consumerPublicId={}", saved.getId(), consumerPublicId);
 
         return toResponseDto(saved);
     }
 
     @Override
-    public Page<AlertResponseDto> getAlertsByConsumer(Long consumerId, Pageable pageable) {
-        log.debug("Fetching alerts for consumerId={}", consumerId);
-        return alertRepository.findByMeter_User_Id(consumerId, pageable).map(this::toResponseDto);
+    public Page<AlertResponseDto> getAlertsByConsumer(String consumerPublicId, Pageable pageable) {
+        log.debug("Fetching alerts for consumerPublicId={}", consumerPublicId);
+
+        User consumer = userRepository.findByPublicId(consumerPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
+
+        return alertRepository.findByMeter_User_Id(consumer.getId(), pageable).map(this::toResponseDto);
     }
 
     private AlertResponseDto toResponseDto(Alert alert) {
