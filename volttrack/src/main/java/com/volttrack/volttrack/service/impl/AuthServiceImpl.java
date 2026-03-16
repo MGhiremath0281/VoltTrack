@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,7 +39,12 @@ public class AuthServiceImpl implements AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
-            return jwtUtil.generateToken(username);
+
+            // Get authenticated user details
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+            // Generate token with roles embedded
+            return jwtUtil.generateToken(userDetails);
         } catch (AuthenticationException e) {
             throw new RuntimeException("Invalid username or password");
         }
