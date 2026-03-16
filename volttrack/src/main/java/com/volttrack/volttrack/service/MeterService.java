@@ -11,6 +11,5 @@ public interface MeterService {
     MeterResponseDto getMeterById(Long id);
     void deleteMeter(Long id);
 
-    // ✅ New method for Officer Dashboard
-    MeterResponseDto assignMeterToConsumer(Long consumerId, MeterRequestDto requestDto);
+    MeterResponseDto assignMeterToConsumer(String consumerPublicId, MeterRequestDto requestDto);
 }
