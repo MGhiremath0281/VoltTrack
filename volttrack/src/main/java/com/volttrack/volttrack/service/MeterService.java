@@ -8,8 +8,14 @@ import org.springframework.data.domain.Pageable;
 public interface MeterService {
     MeterResponseDto createMeter(MeterRequestDto requestDto);
     Page<MeterResponseDto> getAllMeters(Pageable pageable);
+
+    // Legacy numeric ID methods
     MeterResponseDto getMeterById(Long id);
     void deleteMeter(Long id);
 
+    MeterResponseDto getMeterByPublicId(String publicId);
+    void deleteMeterByPublicId(String publicId);
+
+    // Consumer‑specific methods using publicId
     MeterResponseDto assignMeterToConsumer(String consumerPublicId, MeterRequestDto requestDto);
 }

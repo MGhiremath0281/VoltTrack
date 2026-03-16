@@ -83,6 +83,23 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
+    public BillResponseDto getBillByPublicId(String publicId) {
+        log.info("Fetching bill with publicId={}", publicId);
+        Bill bill = billRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with publicId: " + publicId));
+        return toResponseDto(bill);
+    }
+
+    @Override
+    public void deleteBillByPublicId(String publicId) {
+        log.info("Deleting bill with publicId={}", publicId);
+        Bill bill = billRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with publicId: " + publicId));
+        billRepository.delete(bill);
+        log.info("Bill deleted successfully with publicId={}", publicId);
+    }
+
+    @Override
     public Page<BillResponseDto> getBillsByConsumer(String consumerPublicId, Pageable pageable) {
         log.debug("Fetching bills for consumerPublicId={}", consumerPublicId);
 
@@ -135,14 +152,17 @@ public class BillServiceImpl implements BillService {
                 .build();
 
         Bill saved = billRepository.save(bill);
-        log.info("Bill generated successfully with id={} for consumerPublicId={}", saved.getId(), consumer.getPublicId());
+        saved.setPublicId("BILL-" + saved.getId());
+        billRepository.save(saved);
 
+        log.info("Bill generated successfully with publicId={} for consumerPublicId={}", saved.getPublicId(), consumer.getPublicId());
         return toResponseDto(saved);
     }
 
     private BillResponseDto toResponseDto(Bill bill) {
         return BillResponseDto.builder()
                 .id(bill.getId())
+                .publicId(bill.getPublicId())
                 .meterId(bill.getMeter().getId())
                 .consumerId(bill.getConsumer().getId())
                 .billingCycle(bill.getBillingCycle().name())

@@ -1,8 +1,5 @@
 package com.volttrack.volttrack.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,16 +25,10 @@ public class MeterReadingServiceImpl implements MeterReadingService {
 
     @Override
     public MeterReadingDTO saveReading(MeterReadingDTO dto) {
-        log.info("Saving new meter reading for meterId={}", dto.getMeterId());
-
         Meter meter = meterRepository.findById(dto.getMeterId())
-                .orElseThrow(() -> {
-                    log.error("Meter not found with id={}", dto.getMeterId());
-                    return new ResourceNotFoundException("Meter not found with id: " + dto.getMeterId());
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + dto.getMeterId()));
 
         MeterReading entity = MeterReading.builder()
-                .id(dto.getId())
                 .meter(meter)
                 .pulseCount(dto.getPulseCount())
                 .voltage(dto.getVoltage())
@@ -47,45 +38,43 @@ public class MeterReadingServiceImpl implements MeterReadingService {
                 .build();
 
         MeterReading saved = meterReadingRepository.save(entity);
-        log.info("Meter reading saved successfully with id={}", saved.getId());
 
+        // Generate prefixed publicId (READ-<id>)
+        saved.setPublicId("READ-" + saved.getId());
+        meterReadingRepository.save(saved);
+
+        log.info("Meter reading saved successfully with publicId={}", saved.getPublicId());
         return toDTO(saved);
     }
 
+
     @Override
-    public MeterReadingDTO getReadingById(Long id) {
-        log.info("Fetching meter reading with id={}", id);
-        MeterReading reading = meterReadingRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Meter reading not found with id={}", id);
-                    return new ResourceNotFoundException("Meter reading not found with id: " + id);
-                });
-        log.info("Meter reading found with id={}", id);
+    public MeterReadingDTO getReadingByPublicId(String readingPublicId) {
+        log.info("Fetching meter reading with publicId={}", readingPublicId);
+        MeterReading reading = meterReadingRepository.findByPublicId(readingPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Meter reading not found with publicId: " + readingPublicId));
         return toDTO(reading);
     }
 
     @Override
     public Page<MeterReadingDTO> getAllReadings(Pageable pageable) {
         log.debug("Fetching all meter readings with pagination");
-        return meterReadingRepository.findAll(pageable)
-                .map(this::toDTO);
+        return meterReadingRepository.findAll(pageable).map(this::toDTO);
     }
 
     @Override
-    public void deleteReading(Long id) {
-        log.info("Deleting meter reading with id={}", id);
-        if (!meterReadingRepository.existsById(id)) {
-            log.error("Cannot delete. Meter reading not found with id={}", id);
-            throw new ResourceNotFoundException("Cannot delete. Meter reading not found with id: " + id);
-        }
-        meterReadingRepository.deleteById(id);
-        log.info("Meter reading deleted successfully with id={}", id);
+    public void deleteReadingByPublicId(String readingPublicId) {
+        log.info("Deleting meter reading with publicId={}", readingPublicId);
+        MeterReading reading = meterReadingRepository.findByPublicId(readingPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Meter reading not found with publicId: " + readingPublicId));
+        meterReadingRepository.delete(reading);
+        log.info("Meter reading deleted successfully with publicId={}", readingPublicId);
     }
 
-    // --- Helper method to convert entity -> DTO ---
     private MeterReadingDTO toDTO(MeterReading entity) {
         return MeterReadingDTO.builder()
                 .id(entity.getId())
+                .publicId(entity.getPublicId())   // ✅ include publicId
                 .meterId(entity.getMeter().getId())
                 .pulseCount(entity.getPulseCount())
                 .voltage(entity.getVoltage())

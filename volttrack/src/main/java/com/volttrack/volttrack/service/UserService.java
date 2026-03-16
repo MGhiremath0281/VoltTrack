@@ -15,7 +15,7 @@ public interface UserService {
     void deleteUser(Long id);
     UserResponseDto createConsumerActive(UserRequestDto requestDto);
     Page<UserResponseDto> getConsumers(Pageable pageable);
-    UserResponseDto approveOfficer(Long id);
+    UserResponseDto approveOfficer(String publicId);
     UserResponseDto getUserByPublicId(String publicId);
     void deleteUserByPublicId(String publicId);
 }

@@ -42,8 +42,10 @@ public class MeterServiceImpl implements MeterService {
                 .build();
 
         Meter saved = meterRepository.save(meter);
-        log.info("Meter created successfully with id={}", saved.getId());
+        saved.setPublicId("METER-" + saved.getId());   // ✅ generate prefixed publicId
+        meterRepository.save(saved);
 
+        log.info("Meter created successfully with publicId={}", saved.getPublicId());
         return toResponseDto(saved);
     }
 
@@ -59,6 +61,23 @@ public class MeterServiceImpl implements MeterService {
         Meter meter = meterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + id));
         return toResponseDto(meter);
+    }
+
+    @Override
+    public MeterResponseDto getMeterByPublicId(String publicId) {
+        log.info("Fetching meter with publicId={}", publicId);
+        Meter meter = meterRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with publicId: " + publicId));
+        return toResponseDto(meter);
+    }
+
+    @Override
+    public void deleteMeterByPublicId(String publicId) {
+        log.info("Deleting meter with publicId={}", publicId);
+        Meter meter = meterRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with publicId: " + publicId));
+        meterRepository.delete(meter);
+        log.info("Meter deleted successfully with publicId={}", publicId);
     }
 
     @Override
@@ -87,14 +106,17 @@ public class MeterServiceImpl implements MeterService {
                 .build();
 
         Meter saved = meterRepository.save(meter);
-        log.info("Meter assigned successfully with id={} to consumerPublicId={}", saved.getId(), consumerPublicId);
+        saved.setPublicId("METER-" + saved.getId());   // ✅ generate prefixed publicId
+        meterRepository.save(saved);
 
+        log.info("Meter assigned successfully with publicId={} to consumerPublicId={}", saved.getPublicId(), consumerPublicId);
         return toResponseDto(saved);
     }
 
     private MeterResponseDto toResponseDto(Meter meter) {
         return MeterResponseDto.builder()
                 .id(meter.getId())
+                .publicId(meter.getPublicId())
                 .meterId(meter.getMeterId())
                 .location(meter.getLocation())
                 .userId(meter.getUser().getId())

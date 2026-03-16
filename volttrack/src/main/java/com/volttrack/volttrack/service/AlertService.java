@@ -8,10 +8,15 @@ import org.springframework.data.domain.Pageable;
 public interface AlertService {
     AlertResponseDto createAlert(AlertRequestDto requestDto);
     Page<AlertResponseDto> getAllAlerts(Pageable pageable);
+
+    // Legacy numeric ID methods (still useful internally)
     AlertResponseDto getAlertById(Long id);
     void deleteAlert(Long id);
 
-    // Updated to use publicId
+    AlertResponseDto getAlertByPublicId(String publicId);
+    void deleteAlertByPublicId(String publicId);
+
+    // Consumer‑specific methods using publicId
     AlertResponseDto createAlertForConsumer(String consumerPublicId, AlertRequestDto requestDto);
     Page<AlertResponseDto> getAlertsByConsumer(String consumerPublicId, Pageable pageable);
 }

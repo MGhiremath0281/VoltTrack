@@ -132,22 +132,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto approveOfficer(Long id) {
-        log.info("Approving officer with id={}", id);
+    public UserResponseDto approveOfficer(String publicId) {
+        log.info("Approving officer with publicId={}", publicId);
 
-        User officer = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Officer not found with id: " + id));
-
-        if (!officer.getRole().equals(Role.OFFICER)) {
-            throw new IllegalStateException("Only officers can be approved");
-        }
+        User officer = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Officer not found with publicId: " + publicId));
 
         officer.setActive(true);
         User saved = userRepository.save(officer);
 
-        log.info("Officer approved successfully with publicId={}", saved.getPublicId());
+        log.info("Officer approved successfully with publicId={}", publicId);
         return toResponseDto(saved);
     }
+
 
     private UserResponseDto toResponseDto(User user) {
         return UserResponseDto.builder()

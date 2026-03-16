@@ -42,8 +42,10 @@ public class AlertServiceImpl implements AlertService {
                 .build();
 
         Alert saved = alertRepository.save(alert);
-        log.info("Alert created successfully with id={}", saved.getId());
+        saved.setPublicId("ALERT-" + saved.getId()); // ✅ generate prefixed publicId
+        alertRepository.save(saved);
 
+        log.info("Alert created successfully with publicId={}", saved.getPublicId());
         return toResponseDto(saved);
     }
 
@@ -72,6 +74,23 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
+    public AlertResponseDto getAlertByPublicId(String publicId) {
+        log.info("Fetching alert with publicId={}", publicId);
+        Alert alert = alertRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Alert not found with publicId: " + publicId));
+        return toResponseDto(alert);
+    }
+
+    @Override
+    public void deleteAlertByPublicId(String publicId) {
+        log.info("Deleting alert with publicId={}", publicId);
+        Alert alert = alertRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Alert not found with publicId: " + publicId));
+        alertRepository.delete(alert);
+        log.info("Alert deleted successfully with publicId={}", publicId);
+    }
+
+    @Override
     public AlertResponseDto createAlertForConsumer(String consumerPublicId, AlertRequestDto requestDto) {
         log.info("Creating alert for consumerPublicId={} with type={}", consumerPublicId, requestDto.getAlertType());
 
@@ -89,8 +108,10 @@ public class AlertServiceImpl implements AlertService {
                 .build();
 
         Alert saved = alertRepository.save(alert);
-        log.info("Alert created successfully with id={} for consumerPublicId={}", saved.getId(), consumerPublicId);
+        saved.setPublicId("ALERT-" + saved.getId()); // ✅ generate prefixed publicId
+        alertRepository.save(saved);
 
+        log.info("Alert created successfully with publicId={} for consumerPublicId={}", saved.getPublicId(), consumerPublicId);
         return toResponseDto(saved);
     }
 
@@ -107,6 +128,7 @@ public class AlertServiceImpl implements AlertService {
     private AlertResponseDto toResponseDto(Alert alert) {
         return AlertResponseDto.builder()
                 .id(alert.getId())
+                .publicId(alert.getPublicId())
                 .meterId(alert.getMeter().getId())
                 .alertType(alert.getAlertType())
                 .message(alert.getMessage())
