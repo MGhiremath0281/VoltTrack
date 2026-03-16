@@ -31,16 +31,31 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto createUser(UserRequestDto requestDto) {
         log.info("Creating new user with username={} and email={}", requestDto.getUsername(), requestDto.getEmail());
 
+        Role role = Role.valueOf(requestDto.getRole().toUpperCase());
+
+        // Generate prefix based on role
+        String prefix;
+        switch (role) {
+            case ADMIN -> prefix = "ADM";
+            case OFFICER -> prefix = "OFF";
+            case CONSUMER -> prefix = "CON";
+            default -> prefix = "USR";
+        }
+
+        long count = userRepository.countByRole(role);
+        String publicId = prefix + "-" + (count + 1);
+
         User user = User.builder()
                 .username(requestDto.getUsername())
                 .email(requestDto.getEmail())
                 .password(passwordEncoder.encode(requestDto.getPassword()))
-                .role(Role.valueOf(requestDto.getRole().toUpperCase()))
+                .role(role)
                 .active(requestDto.getActive() != null ? requestDto.getActive() : true)
+                .publicId(publicId)
                 .build();
 
         User saved = userRepository.save(user);
-        log.info("User created successfully with id={}", saved.getId());
+        log.info("User created successfully with publicId={}", saved.getPublicId());
 
         return toResponseDto(saved);
     }
@@ -57,6 +72,21 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         return toResponseDto(user);
+    }
+
+    public UserResponseDto getUserByPublicId(String publicId) {
+        log.info("Fetching user with publicId={}", publicId);
+        User user = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with publicId: " + publicId));
+        return toResponseDto(user);
+    }
+
+    public void deleteUserByPublicId(String publicId) {
+        log.info("Deleting user with publicId={}", publicId);
+        User user = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with publicId: " + publicId));
+        userRepository.delete(user);
+        log.info("User deleted successfully with publicId={}", publicId);
     }
 
     @Override
@@ -77,16 +107,20 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already in use: " + requestDto.getEmail());
         }
 
+        long count = userRepository.countByRole(Role.CONSUMER);
+        String publicId = "CON-" + (count + 1);
+
         User consumer = User.builder()
                 .username(requestDto.getUsername())
                 .email(requestDto.getEmail())
                 .password(passwordEncoder.encode(requestDto.getPassword()))
                 .role(Role.CONSUMER)
                 .active(true)
+                .publicId(publicId)
                 .build();
 
         User saved = userRepository.save(consumer);
-        log.info("Consumer created successfully with id={}", saved.getId());
+        log.info("Consumer created successfully with publicId={}", saved.getPublicId());
 
         return toResponseDto(saved);
     }
@@ -97,7 +131,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByRole(Role.CONSUMER, pageable).map(this::toResponseDto);
     }
 
-    // 🔹 New method for approving officers
     @Override
     public UserResponseDto approveOfficer(Long id) {
         log.info("Approving officer with id={}", id);
@@ -112,13 +145,14 @@ public class UserServiceImpl implements UserService {
         officer.setActive(true);
         User saved = userRepository.save(officer);
 
-        log.info("Officer approved successfully with id={}", saved.getId());
+        log.info("Officer approved successfully with publicId={}", saved.getPublicId());
         return toResponseDto(saved);
     }
 
     private UserResponseDto toResponseDto(User user) {
         return UserResponseDto.builder()
                 .id(user.getId())
+                .publicId(user.getPublicId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole().name())

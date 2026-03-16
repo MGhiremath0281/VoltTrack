@@ -43,28 +43,28 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers(pageable));
     }
 
-    @Operation(summary = "Get user by ID", description = "Retrieve a specific user by ID. Accessible by ADMIN, OFFICER, or the user themselves.")
+    @Operation(summary = "Get user by publicId", description = "Retrieve a specific user by publicId (ADM-1, OFF-1, CON-1). Accessible by ADMIN, OFFICER, or the user themselves.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "401", description = "Unauthorized access")
     })
-    @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER') or #userId == authentication.principal.id")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long userId) {
-        return ResponseEntity.ok(userService.getUserById(userId));
+    @GetMapping("/{publicId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER') or #publicId == authentication.principal.publicId")
+    public ResponseEntity<UserResponseDto> getUserByPublicId(@PathVariable String publicId) {
+        return ResponseEntity.ok(userService.getUserByPublicId(publicId));
     }
 
-    @Operation(summary = "Delete user", description = "Delete a user by ID. Only ADMIN can delete users.")
+    @Operation(summary = "Delete user", description = "Delete a user by publicId. Only ADMIN can delete users.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - requires ADMIN role")
     })
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/{publicId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
+    public ResponseEntity<Void> deleteUser(@PathVariable String publicId) {
+        userService.deleteUserByPublicId(publicId);
         return ResponseEntity.noContent().build();
     }
 }
