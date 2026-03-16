@@ -7,18 +7,10 @@ import org.springframework.stereotype.Service;
 
 import com.volttrack.volttrack.dto.bill.BillRequestDto;
 import com.volttrack.volttrack.dto.bill.BillResponseDto;
-import com.volttrack.volttrack.entity.Bill;
-import com.volttrack.volttrack.entity.BillStatus;
-import com.volttrack.volttrack.entity.BillingCycle;
-import com.volttrack.volttrack.entity.Meter;
-import com.volttrack.volttrack.entity.MeterReading;
-import com.volttrack.volttrack.entity.User;
+import com.volttrack.volttrack.entity.*;
 import com.volttrack.volttrack.exception.BillingException;
 import com.volttrack.volttrack.exception.ResourceNotFoundException;
-import com.volttrack.volttrack.repository.BillRepository;
-import com.volttrack.volttrack.repository.MeterReadingRepository;
-import com.volttrack.volttrack.repository.MeterRepository;
-import com.volttrack.volttrack.repository.UserRepository;
+import com.volttrack.volttrack.repository.*;
 import com.volttrack.volttrack.service.BillService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -78,22 +70,26 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public BillResponseDto generateBillForConsumer(Long consumerId) {
-        log.info("Generating bill for consumerId={}", consumerId);
+    public BillResponseDto generateBillForConsumer(String consumerPublicId) {
+        log.info("Generating bill for consumerPublicId={}", consumerPublicId);
 
-        User consumer = userRepository.findById(consumerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with id: " + consumerId));
+        User consumer = userRepository.findByPublicId(consumerPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
 
-        Meter meter = meterRepository.findByUser_Id(consumerId)
-                .orElseThrow(() -> new ResourceNotFoundException("No meter found for consumer id: " + consumerId));
+        Meter meter = meterRepository.findByUser_Id(consumer.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("No meter found for consumer publicId: " + consumerPublicId));
 
         return generateBill(meter, consumer);
     }
 
     @Override
-    public Page<BillResponseDto> getBillsByConsumer(Long consumerId, Pageable pageable) {
-        log.debug("Fetching bills for consumerId={}", consumerId);
-        return billRepository.findByConsumer_Id(consumerId, pageable).map(this::toResponseDto);
+    public Page<BillResponseDto> getBillsByConsumer(String consumerPublicId, Pageable pageable) {
+        log.debug("Fetching bills for consumerPublicId={}", consumerPublicId);
+
+        User consumer = userRepository.findByPublicId(consumerPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
+
+        return billRepository.findByConsumer_Id(consumer.getId(), pageable).map(this::toResponseDto);
     }
 
     private BillResponseDto generateBill(Meter meter, User consumer) {
@@ -139,7 +135,7 @@ public class BillServiceImpl implements BillService {
                 .build();
 
         Bill saved = billRepository.save(bill);
-        log.info("Bill generated successfully with id={} for consumerId={}", saved.getId(), consumer.getId());
+        log.info("Bill generated successfully with id={} for consumerPublicId={}", saved.getId(), consumer.getPublicId());
 
         return toResponseDto(saved);
     }
