@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
@@ -39,9 +40,15 @@ public class JwtUtil {
     }
 
     public String generateToken(UserDetails userDetails) {
+        // Store roles as plain strings: ["ADMIN", "OFFICER"]
+        var roles = userDetails.getAuthorities()
+                .stream()
+                .map(auth -> auth.getAuthority().replace("ROLE_", "")) // strip ROLE_ prefix
+                .collect(Collectors.toList());
+
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
-                .claim("roles", userDetails.getAuthorities()) // embed roles
+                .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)

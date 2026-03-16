@@ -29,7 +29,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserResponseDto register(UserRequestDto requestDto) {
-        // UserServiceImpl already encodes password and sets role
         return userService.createUser(requestDto);
     }
 
@@ -39,11 +38,7 @@ public class AuthServiceImpl implements AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
-
-            // Get authenticated user details
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-            // Generate token with roles embedded
             return jwtUtil.generateToken(userDetails);
         } catch (AuthenticationException e) {
             throw new RuntimeException("Invalid username or password");
