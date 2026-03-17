@@ -15,6 +15,8 @@ import com.volttrack.volttrack.service.MeterReadingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,10 +27,18 @@ public class MeterReadingServiceImpl implements MeterReadingService {
 
     @Override
     public MeterReadingDTO saveReading(MeterReadingDTO dto) {
-        Meter meter = meterRepository.findById(dto.getMeterId())
-                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + dto.getMeterId()));
+
+        // ✅ Fetch meter using publicId
+        Meter meter = meterRepository.findByPublicId(dto.getMeterPublicId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Meter not found with publicId: " + dto.getMeterPublicId())
+                );
+
+        // ✅ Generate publicId BEFORE saving (FIX 🔥)
+        String publicId = "READ-" + UUID.randomUUID().toString().substring(0, 8);
 
         MeterReading entity = MeterReading.builder()
+                .publicId(publicId)
                 .meter(meter)
                 .pulseCount(dto.getPulseCount())
                 .voltage(dto.getVoltage())
@@ -37,45 +47,41 @@ public class MeterReadingServiceImpl implements MeterReadingService {
                 .timestamp(dto.getTimestamp())
                 .build();
 
+        // ✅ Single DB call
         MeterReading saved = meterReadingRepository.save(entity);
-
-        // Generate prefixed publicId (READ-<id>)
-        saved.setPublicId("READ-" + saved.getId());
-        meterReadingRepository.save(saved);
 
         log.info("Meter reading saved successfully with publicId={}", saved.getPublicId());
         return toDTO(saved);
     }
 
-
     @Override
     public MeterReadingDTO getReadingByPublicId(String readingPublicId) {
-        log.info("Fetching meter reading with publicId={}", readingPublicId);
         MeterReading reading = meterReadingRepository.findByPublicId(readingPublicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Meter reading not found with publicId: " + readingPublicId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Meter reading not found with publicId: " + readingPublicId)
+                );
         return toDTO(reading);
     }
 
     @Override
     public Page<MeterReadingDTO> getAllReadings(Pageable pageable) {
-        log.debug("Fetching all meter readings with pagination");
         return meterReadingRepository.findAll(pageable).map(this::toDTO);
     }
 
     @Override
     public void deleteReadingByPublicId(String readingPublicId) {
-        log.info("Deleting meter reading with publicId={}", readingPublicId);
         MeterReading reading = meterReadingRepository.findByPublicId(readingPublicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Meter reading not found with publicId: " + readingPublicId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Meter reading not found with publicId: " + readingPublicId)
+                );
         meterReadingRepository.delete(reading);
-        log.info("Meter reading deleted successfully with publicId={}", readingPublicId);
     }
 
+    // ✅ DTO Mapping
     private MeterReadingDTO toDTO(MeterReading entity) {
         return MeterReadingDTO.builder()
-                .id(entity.getId())
-                .publicId(entity.getPublicId())   // ✅ include publicId
-                .meterId(entity.getMeter().getId())
+                .publicId(entity.getPublicId())
+                .meterPublicId(entity.getMeter().getPublicId())
                 .pulseCount(entity.getPulseCount())
                 .voltage(entity.getVoltage())
                 .current(entity.getCurrent())

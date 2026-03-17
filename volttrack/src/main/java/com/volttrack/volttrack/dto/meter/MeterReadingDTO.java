@@ -1,5 +1,6 @@
 package com.volttrack.volttrack.dto.meter;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
@@ -11,11 +12,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class MeterReadingDTO {
-    private Long id;
-    private String publicId;
 
-    @NotNull(message = "Meter ID is required")
-    private Long meterId;
+    private String publicId;   // ✅ exposed ID
+
+    @NotBlank(message = "Meter Public ID is required")
+    private String meterPublicId;
 
     @Positive(message = "Pulse count must be positive")
     private Integer pulseCount;
