@@ -1,5 +1,7 @@
 package com.volttrack.volttrack.entity;
 
+import com.volttrack.volttrack.entity.enums.Billing;
+import com.volttrack.volttrack.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 

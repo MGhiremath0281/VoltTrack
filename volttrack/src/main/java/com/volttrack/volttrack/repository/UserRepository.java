@@ -1,6 +1,6 @@
 package com.volttrack.volttrack.repository;
 
-import com.volttrack.volttrack.entity.Role;
+import com.volttrack.volttrack.entity.enums.Role;
 import com.volttrack.volttrack.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

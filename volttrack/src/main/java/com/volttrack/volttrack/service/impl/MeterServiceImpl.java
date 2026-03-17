@@ -3,7 +3,7 @@ package com.volttrack.volttrack.service.impl;
 import com.volttrack.volttrack.dto.meter.MeterRequestDto;
 import com.volttrack.volttrack.dto.meter.MeterResponseDto;
 import com.volttrack.volttrack.entity.Meter;
-import com.volttrack.volttrack.entity.Status;
+import com.volttrack.volttrack.entity.enums.Status;
 import com.volttrack.volttrack.entity.User;
 import com.volttrack.volttrack.exception.ResourceNotFoundException;
 import com.volttrack.volttrack.repository.MeterRepository;
@@ -41,9 +41,10 @@ public class MeterServiceImpl implements MeterService {
                 .billing(requestDto.getBilling())
                 .build();
 
-        Meter saved = meterRepository.save(meter);
-        saved.setPublicId("METER-" + saved.getId());   // ✅ generate prefixed publicId
-        meterRepository.save(saved);
+        Meter temp = meterRepository.save(meter);
+
+        temp.setPublicId("METER-" + temp.getId());
+        Meter saved = meterRepository.save(temp);
 
         log.info("Meter created successfully with publicId={}", saved.getPublicId());
         return toResponseDto(saved);
@@ -105,9 +106,10 @@ public class MeterServiceImpl implements MeterService {
                 .billing(requestDto.getBilling())
                 .build();
 
-        Meter saved = meterRepository.save(meter);
-        saved.setPublicId("METER-" + saved.getId());   // ✅ generate prefixed publicId
-        meterRepository.save(saved);
+        Meter temp = meterRepository.save(meter);
+
+        temp.setPublicId("METER-" + temp.getId());
+        Meter saved = meterRepository.save(temp);
 
         log.info("Meter assigned successfully with publicId={} to consumerPublicId={}", saved.getPublicId(), consumerPublicId);
         return toResponseDto(saved);

@@ -1,5 +1,6 @@
 package com.volttrack.volttrack.entity;
 
+import com.volttrack.volttrack.entity.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 

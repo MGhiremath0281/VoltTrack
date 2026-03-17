@@ -1,5 +1,5 @@
 
-package com.volttrack.volttrack.entity;
+package com.volttrack.volttrack.entity.enums;
 
 
 public enum BillingCycle {

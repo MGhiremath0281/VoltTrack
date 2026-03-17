@@ -1,8 +1,8 @@
 package com.volttrack.volttrack.dto.meter;
 
 
-import com.volttrack.volttrack.entity.Status;
-import com.volttrack.volttrack.entity.Billing;
+import com.volttrack.volttrack.entity.enums.Status;
+import com.volttrack.volttrack.entity.enums.Billing;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;

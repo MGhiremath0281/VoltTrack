@@ -1,7 +1,7 @@
 package com.volttrack.volttrack.security;
 
 
-import com.volttrack.volttrack.entity.Role;
+import com.volttrack.volttrack.entity.enums.Role;
 import com.volttrack.volttrack.entity.User;
 import com.volttrack.volttrack.repository.UserRepository;
 import jakarta.annotation.PostConstruct;

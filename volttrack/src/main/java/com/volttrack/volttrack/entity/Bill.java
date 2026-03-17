@@ -1,5 +1,7 @@
 package com.volttrack.volttrack.entity;
 
+import com.volttrack.volttrack.entity.enums.BillStatus;
+import com.volttrack.volttrack.entity.enums.BillingCycle;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

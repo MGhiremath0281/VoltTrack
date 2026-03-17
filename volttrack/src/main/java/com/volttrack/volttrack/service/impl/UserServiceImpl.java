@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.volttrack.volttrack.dto.user.UserRequestDto;
 import com.volttrack.volttrack.dto.user.UserResponseDto;
-import com.volttrack.volttrack.entity.Role;
+import com.volttrack.volttrack.entity.enums.Role;
 import com.volttrack.volttrack.entity.User;
 import com.volttrack.volttrack.exception.ResourceNotFoundException;
 import com.volttrack.volttrack.repository.UserRepository;

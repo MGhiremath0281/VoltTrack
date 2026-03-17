@@ -1,6 +1,9 @@
 package com.volttrack.volttrack.service.impl;
 
 import java.time.LocalDateTime;
+
+import com.volttrack.volttrack.entity.enums.BillStatus;
+import com.volttrack.volttrack.entity.enums.BillingCycle;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -153,6 +156,9 @@ public class BillServiceImpl implements BillService {
 
         Bill saved = billRepository.save(bill);
         saved.setPublicId("BILL-" + saved.getId());
+
+
+
         billRepository.save(saved);
 
         log.info("Bill generated successfully with publicId={} for consumerPublicId={}", saved.getPublicId(), consumer.getPublicId());
