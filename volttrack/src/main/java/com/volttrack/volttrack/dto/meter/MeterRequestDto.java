@@ -19,8 +19,8 @@ public class MeterRequestDto {
     @NotBlank(message = "Location is required")
     private String location;
 
-    @NotNull(message = "User ID is required")
-    private Long userId;
+    @NotBlank(message = "User Public ID is required")
+    private String userPublicId;
 
     @NotNull(message = "Status is required")
     private Status status;

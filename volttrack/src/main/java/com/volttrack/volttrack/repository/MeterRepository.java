@@ -14,6 +14,6 @@ public interface MeterRepository extends JpaRepository<Meter, Long> {
     Optional<Meter> findByUser_Id(Long userId);
 
     Page<Meter> findByUser_Id(Long userId, Pageable pageable);
-
+    boolean existsByMeterId(String meterId);
     Optional<Meter> findByPublicId(String publicId);
 }

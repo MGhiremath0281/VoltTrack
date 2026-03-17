@@ -4,6 +4,7 @@ import com.volttrack.volttrack.entity.enums.Billing;
 import com.volttrack.volttrack.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -32,4 +33,11 @@ public class Meter {
 
     @Enumerated(EnumType.STRING)
     private Billing billing;
+
+    @PrePersist
+    public void generatePublicId() {
+        if (this.publicId == null) {
+            this.publicId = "MTR-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+    }
 }

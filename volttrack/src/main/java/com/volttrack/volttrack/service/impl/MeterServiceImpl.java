@@ -3,12 +3,13 @@ package com.volttrack.volttrack.service.impl;
 import com.volttrack.volttrack.dto.meter.MeterRequestDto;
 import com.volttrack.volttrack.dto.meter.MeterResponseDto;
 import com.volttrack.volttrack.entity.Meter;
-import com.volttrack.volttrack.entity.enums.Status;
 import com.volttrack.volttrack.entity.User;
+import com.volttrack.volttrack.entity.enums.Status;
 import com.volttrack.volttrack.exception.ResourceNotFoundException;
 import com.volttrack.volttrack.repository.MeterRepository;
 import com.volttrack.volttrack.repository.UserRepository;
 import com.volttrack.volttrack.service.MeterService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,10 +29,15 @@ public class MeterServiceImpl implements MeterService {
 
     @Override
     public MeterResponseDto createMeter(MeterRequestDto requestDto) {
-        log.info("Creating new meter with meterId={} for userId={}", requestDto.getMeterId(), requestDto.getUserId());
+        log.info("Creating meter with meterId={} for userId={}",
+                requestDto.getMeterId(), requestDto.getUserPublicId());
 
-        User user = userRepository.findById(requestDto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + requestDto.getUserId()));
+        User user = userRepository.findByPublicId(requestDto.getUserPublicId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found with publicId: " + requestDto.getUserPublicId()));
+        if (meterRepository.existsByMeterId(requestDto.getMeterId())) {
+            throw new RuntimeException("Meter already exists with meterId: " + requestDto.getMeterId());
+        }
 
         Meter meter = Meter.builder()
                 .meterId(requestDto.getMeterId())
@@ -41,10 +47,7 @@ public class MeterServiceImpl implements MeterService {
                 .billing(requestDto.getBilling())
                 .build();
 
-        Meter temp = meterRepository.save(meter);
-
-        temp.setPublicId("METER-" + temp.getId());
-        Meter saved = meterRepository.save(temp);
+        Meter saved = meterRepository.save(meter);
 
         log.info("Meter created successfully with publicId={}", saved.getPublicId());
         return toResponseDto(saved);
@@ -52,31 +55,41 @@ public class MeterServiceImpl implements MeterService {
 
     @Override
     public Page<MeterResponseDto> getAllMeters(Pageable pageable) {
-        log.debug("Fetching all meters with pagination");
-        return meterRepository.findAll(pageable).map(this::toResponseDto);
+        log.debug("Fetching all meters");
+        return meterRepository.findAll(pageable)
+                .map(this::toResponseDto);
     }
 
     @Override
     public MeterResponseDto getMeterById(Long id) {
         log.info("Fetching meter with id={}", id);
+
         Meter meter = meterRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Meter not found with id: " + id));
+
         return toResponseDto(meter);
     }
 
     @Override
     public MeterResponseDto getMeterByPublicId(String publicId) {
         log.info("Fetching meter with publicId={}", publicId);
+
         Meter meter = meterRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with publicId: " + publicId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Meter not found with publicId: " + publicId));
+
         return toResponseDto(meter);
     }
 
     @Override
     public void deleteMeterByPublicId(String publicId) {
         log.info("Deleting meter with publicId={}", publicId);
+
         Meter meter = meterRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with publicId: " + publicId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Meter not found with publicId: " + publicId));
+
         meterRepository.delete(meter);
         log.info("Meter deleted successfully with publicId={}", publicId);
     }
@@ -84,19 +97,26 @@ public class MeterServiceImpl implements MeterService {
     @Override
     public void deleteMeter(Long id) {
         log.info("Deleting meter with id={}", id);
+
         if (!meterRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Cannot delete. Meter not found with id: " + id);
+            throw new ResourceNotFoundException("Meter not found with id: " + id);
         }
+
         meterRepository.deleteById(id);
         log.info("Meter deleted successfully with id={}", id);
     }
 
     @Override
     public MeterResponseDto assignMeterToConsumer(String consumerPublicId, MeterRequestDto requestDto) {
-        log.info("Assigning meter with meterId={} to consumerPublicId={}", requestDto.getMeterId(), consumerPublicId);
+        log.info("Assigning meter with meterId={} to consumerPublicId={}",
+                requestDto.getMeterId(), consumerPublicId);
 
         User consumer = userRepository.findByPublicId(consumerPublicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
+        if (meterRepository.existsByMeterId(requestDto.getMeterId())) {
+            throw new RuntimeException("Meter already exists with meterId: " + requestDto.getMeterId());
+        }
 
         Meter meter = Meter.builder()
                 .meterId(requestDto.getMeterId())
@@ -106,19 +126,19 @@ public class MeterServiceImpl implements MeterService {
                 .billing(requestDto.getBilling())
                 .build();
 
-        Meter temp = meterRepository.save(meter);
 
-        temp.setPublicId("METER-" + temp.getId());
-        Meter saved = meterRepository.save(temp);
+        Meter saved = meterRepository.save(meter);
 
-        log.info("Meter assigned successfully with publicId={} to consumerPublicId={}", saved.getPublicId(), consumerPublicId);
+        log.info("Meter assigned successfully with publicId={} to consumerPublicId={}",
+                saved.getPublicId(), consumerPublicId);
+
         return toResponseDto(saved);
     }
 
     private MeterResponseDto toResponseDto(Meter meter) {
         return MeterResponseDto.builder()
                 .id(meter.getId())
-                .publicId(meter.getPublicId())
+                .userPublicId(meter.getUser().getPublicId())
                 .meterId(meter.getMeterId())
                 .location(meter.getLocation())
                 .userId(meter.getUser().getId())

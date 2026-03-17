@@ -41,7 +41,7 @@ public class MeterSecurity {
             return true;
         }
 
-        // CONSUMER
-        return dto.getUserId().equals(user.getId());
+
+        return dto.getUserPublicId().equals(user.getId());
     }
 }
