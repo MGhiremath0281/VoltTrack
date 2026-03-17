@@ -1,10 +1,6 @@
 package com.volttrack.volttrack.dto.bill;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
 @Getter
 @Setter
@@ -12,5 +8,6 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 public class BillRequestDto {
-    private Long meterId;   
+
+    private String meterPublicId;
 }

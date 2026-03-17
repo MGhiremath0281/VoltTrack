@@ -1,12 +1,8 @@
 package com.volttrack.volttrack.dto.bill;
 
-import java.time.LocalDateTime;
+import lombok.*;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -14,22 +10,26 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 public class BillResponseDto {
-    private Long id;
+
     private String publicId;
-    private Long meterId;
-    private Long consumerId;
+
+    private String meterPublicId;
+    private String consumerPublicId;
+
     private String billingCycle;
     private LocalDateTime cycleStartDate;
     private LocalDateTime cycleEndDate;
+
     private Double openingReading;
     private Double closingReading;
     private Double unitsConsumed;
+
     private Double baseAmount;
     private Double fixedCharges;
     private Double taxAmount;
     private Double totalAmount;
+
     private String status;
     private LocalDateTime generatedAt;
     private LocalDateTime dueDate;
 }
-
