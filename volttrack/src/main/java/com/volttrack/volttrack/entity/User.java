@@ -2,9 +2,10 @@ package com.volttrack.volttrack.entity;
 
 import com.volttrack.volttrack.entity.enums.Role;
 import jakarta.persistence.*;
-import com.volttrack.volttrack.entity.enums.Role;
 import jakarta.validation.constraints.Email;
 import lombok.*;
+
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -22,8 +23,9 @@ public class User {
     private String username;
 
     @Email
-    @Column(unique = true,nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
+
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -34,4 +36,11 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String publicId;
+
+    @PrePersist
+    public void generatePublicId() {
+        if (this.publicId == null) {
+            this.publicId = UUID.randomUUID().toString();
+        }
+    }
 }
