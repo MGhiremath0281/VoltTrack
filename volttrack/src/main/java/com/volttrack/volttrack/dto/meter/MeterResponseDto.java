@@ -10,11 +10,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class MeterResponseDto {
+
     private Long id;
-    private String userPublicId;
+    private String publicId;
     private String meterId;
     private String location;
-    private Long userId;
+    private String userPublicId;
     private Status status;
     private Billing billing;
 }

@@ -1,7 +1,6 @@
 package com.volttrack.volttrack.security;
 
 import com.volttrack.volttrack.dto.meter.MeterRequestDto;
-import com.volttrack.volttrack.entity.Meter;
 import com.volttrack.volttrack.repository.MeterRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,12 +15,12 @@ public class MeterSecurity {
         this.meterRepository = meterRepository;
     }
 
-    public boolean isOwner(Long meterId, Authentication authentication) {
+    public boolean isOwner(String publicId, Authentication authentication) {
 
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
-        return meterRepository.findById(meterId)
-                .map(meter -> meter.getUser().getId().equals(user.getId()))
+        return meterRepository.findByPublicId(publicId)
+                .map(meter -> meter.getUser().getPublicId().equals(user.getPublicId()))
                 .orElse(false);
     }
 
@@ -41,7 +40,6 @@ public class MeterSecurity {
             return true;
         }
 
-
-        return dto.getUserPublicId().equals(user.getId());
+        return dto.getUserPublicId().equals(user.getPublicId());
     }
 }

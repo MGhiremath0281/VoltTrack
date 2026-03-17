@@ -4,6 +4,7 @@ import com.volttrack.volttrack.entity.enums.Billing;
 import com.volttrack.volttrack.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.UUID;
 
 @Entity
@@ -21,7 +22,9 @@ public class Meter {
     @Column(name = "public_id", unique = true, nullable = false)
     private String publicId;
 
+    @Column(unique = true, nullable = false)
     private String meterId;
+
     private String location;
 
     @ManyToOne
@@ -35,9 +38,14 @@ public class Meter {
     private Billing billing;
 
     @PrePersist
-    public void generatePublicId() {
+    public void generateIds() {
+
         if (this.publicId == null) {
             this.publicId = "MTR-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+
+        if (this.meterId == null) {
+            this.meterId = "ELEC-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         }
     }
 }
