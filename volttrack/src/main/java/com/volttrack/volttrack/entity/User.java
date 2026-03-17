@@ -2,6 +2,8 @@ package com.volttrack.volttrack.entity;
 
 import com.volttrack.volttrack.entity.enums.Role;
 import jakarta.persistence.*;
+import com.volttrack.volttrack.entity.enums.Role;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 
 @Entity
@@ -18,6 +20,9 @@ public class User {
     private Long id;
 
     private String username;
+
+    @Email
+    @Column(unique = true,nullable = false)
     private String email;
     private String password;
 
