@@ -1,7 +1,7 @@
 package com.volttrack.volttrack.dto.meter;
 
+import com.volttrack.volttrack.entity.enums.BillingCycle;
 import com.volttrack.volttrack.entity.enums.Status;
-import com.volttrack.volttrack.entity.enums.Billing;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -22,5 +22,5 @@ public class MeterRequestDto {
     @NotNull(message = "Status is required")
     private Status status;
 
-    private Billing billing;
+    private BillingCycle billing;
 }

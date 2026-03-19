@@ -1,7 +1,7 @@
 package com.volttrack.volttrack.dto.meter;
 
+import com.volttrack.volttrack.entity.enums.BillingCycle;
 import com.volttrack.volttrack.entity.enums.Status;
-import com.volttrack.volttrack.entity.enums.Billing;
 import lombok.*;
 
 @Getter
@@ -17,5 +17,5 @@ public class MeterResponseDto {
     private String location;
     private String userPublicId;
     private Status status;
-    private Billing billing;
+    private BillingCycle billing;
 }

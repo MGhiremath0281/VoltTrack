@@ -1,6 +1,6 @@
 package com.volttrack.volttrack.entity;
 
-import com.volttrack.volttrack.entity.enums.Billing;
+import com.volttrack.volttrack.entity.enums.BillingCycle;
 import com.volttrack.volttrack.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,7 +35,7 @@ public class Meter {
     private Status status;
 
     @Enumerated(EnumType.STRING)
-    private Billing billing;
+    private BillingCycle billing;
 
     @PrePersist
     public void generateIds() {
