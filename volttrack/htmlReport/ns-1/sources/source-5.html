@@ -1,0 +1,238 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MeterServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.volttrack.volttrack.service.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: MeterServiceImpl (com.volttrack.volttrack.service.impl)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MeterServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/55)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.volttrack.volttrack.service.impl;
+&nbsp;
+&nbsp;import com.volttrack.volttrack.dto.meter.MeterRequestDto;
+&nbsp;import com.volttrack.volttrack.dto.meter.MeterResponseDto;
+&nbsp;import com.volttrack.volttrack.entity.Meter;
+&nbsp;import com.volttrack.volttrack.entity.User;
+&nbsp;import com.volttrack.volttrack.entity.enums.Status;
+&nbsp;import com.volttrack.volttrack.exception.ResourceNotFoundException;
+&nbsp;import com.volttrack.volttrack.repository.MeterRepository;
+&nbsp;import com.volttrack.volttrack.repository.UserRepository;
+&nbsp;import com.volttrack.volttrack.service.MeterService;
+&nbsp;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;@Service
+<b class="nc">&nbsp;@Slf4j</b>
+&nbsp;public class MeterServiceImpl implements MeterService {
+&nbsp;
+&nbsp;    private final MeterRepository meterRepository;
+&nbsp;    private final UserRepository userRepository;
+&nbsp;
+<b class="nc">&nbsp;    public MeterServiceImpl(MeterRepository meterRepository, UserRepository userRepository) {</b>
+<b class="nc">&nbsp;        this.meterRepository = meterRepository;</b>
+<b class="nc">&nbsp;        this.userRepository = userRepository;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public MeterResponseDto createMeter(MeterRequestDto requestDto) {
+&nbsp;
+<b class="nc">&nbsp;        log.info(&quot;Creating meter for userPublicId={}&quot;, requestDto.getUserPublicId());</b>
+&nbsp;
+<b class="nc">&nbsp;        User user = userRepository.findByPublicId(requestDto.getUserPublicId())</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt;</b>
+<b class="nc">&nbsp;                        new ResourceNotFoundException(&quot;User not found with publicId: &quot; + requestDto.getUserPublicId()));</b>
+&nbsp;
+<b class="nc">&nbsp;        Meter meter = Meter.builder()</b>
+<b class="nc">&nbsp;                .location(requestDto.getLocation())</b>
+<b class="nc">&nbsp;                .user(user)</b>
+<b class="nc">&nbsp;                .status(requestDto.getStatus())</b>
+<b class="nc">&nbsp;                .billing(requestDto.getBilling())</b>
+<b class="nc">&nbsp;                .build();</b>
+&nbsp;
+<b class="nc">&nbsp;        Meter saved = meterRepository.save(meter);</b>
+&nbsp;
+<b class="nc">&nbsp;        log.info(&quot;Meter created successfully with publicId={} and meterId={}&quot;,</b>
+<b class="nc">&nbsp;                saved.getPublicId(), saved.getMeterId());</b>
+&nbsp;
+<b class="nc">&nbsp;        return toResponseDto(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Page&lt;MeterResponseDto&gt; getAllMeters(Pageable pageable) {
+<b class="nc">&nbsp;        return meterRepository.findAll(pageable)</b>
+<b class="nc">&nbsp;                .map(this::toResponseDto);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public MeterResponseDto getMeterById(Long id) {
+<b class="nc">&nbsp;        Meter meter = meterRepository.findById(id)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt;</b>
+<b class="nc">&nbsp;                        new ResourceNotFoundException(&quot;Meter not found with id: &quot; + id));</b>
+<b class="nc">&nbsp;        return toResponseDto(meter);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public MeterResponseDto getMeterByPublicId(String publicId) {
+<b class="nc">&nbsp;        Meter meter = meterRepository.findByPublicId(publicId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt;</b>
+<b class="nc">&nbsp;                        new ResourceNotFoundException(&quot;Meter not found with publicId: &quot; + publicId));</b>
+<b class="nc">&nbsp;        return toResponseDto(meter);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void deleteMeterByPublicId(String publicId) {
+<b class="nc">&nbsp;        Meter meter = meterRepository.findByPublicId(publicId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt;</b>
+<b class="nc">&nbsp;                        new ResourceNotFoundException(&quot;Meter not found with publicId: &quot; + publicId));</b>
+<b class="nc">&nbsp;        meterRepository.delete(meter);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void deleteMeter(Long id) {
+<b class="nc">&nbsp;        if (!meterRepository.existsById(id)) {</b>
+<b class="nc">&nbsp;            throw new ResourceNotFoundException(&quot;Meter not found with id: &quot; + id);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        meterRepository.deleteById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public MeterResponseDto assignMeterToConsumer(String consumerPublicId, MeterRequestDto requestDto) {
+&nbsp;
+<b class="nc">&nbsp;        User consumer = userRepository.findByPublicId(consumerPublicId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt;</b>
+<b class="nc">&nbsp;                        new ResourceNotFoundException(&quot;Consumer not found with publicId: &quot; + consumerPublicId));</b>
+&nbsp;
+<b class="nc">&nbsp;        Meter meter = Meter.builder()</b>
+<b class="nc">&nbsp;                .location(requestDto.getLocation())</b>
+<b class="nc">&nbsp;                .user(consumer)</b>
+<b class="nc">&nbsp;                .status(Status.ONLINE)</b>
+<b class="nc">&nbsp;                .billing(requestDto.getBilling())</b>
+<b class="nc">&nbsp;                .build();</b>
+&nbsp;
+<b class="nc">&nbsp;        Meter saved = meterRepository.save(meter);</b>
+&nbsp;
+<b class="nc">&nbsp;        return toResponseDto(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private MeterResponseDto toResponseDto(Meter meter) {
+<b class="nc">&nbsp;        return MeterResponseDto.builder()</b>
+<b class="nc">&nbsp;                .id(meter.getId())</b>
+<b class="nc">&nbsp;                .publicId(meter.getPublicId())</b>
+<b class="nc">&nbsp;                .meterId(meter.getMeterId())</b>
+<b class="nc">&nbsp;                .location(meter.getLocation())</b>
+<b class="nc">&nbsp;                .userPublicId(meter.getUser().getPublicId())</b>
+<b class="nc">&nbsp;                .status(meter.getStatus())</b>
+<b class="nc">&nbsp;                .billing(meter.getBilling())</b>
+<b class="nc">&nbsp;                .build();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-19 17:01</div>
+</div>
+</body>
+</html>
