@@ -5,7 +5,7 @@
 <html id="htmlId">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
-  <title>Coverage Report > BillService</title>
+  <title>Coverage Report > AuthService</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -22,14 +22,14 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">com.volttrack.volttrack.service</a>
 </div>
 
-<h1>Coverage Summary for Class: BillService (com.volttrack.volttrack.service)</h1>
+<h1>Coverage Summary for Class: AuthService (com.volttrack.volttrack.service)</h1>
 
 <table class="coverageStats">
 <tr>
   <th class="name">Class</th>
 </tr>
 <tr>
-  <td class="name">BillService</td>
+  <td class="name">AuthService</td>
 </tr>
 
 </table>
@@ -41,23 +41,12 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package com.volttrack.volttrack.service;
 &nbsp;
-&nbsp;import com.volttrack.volttrack.dto.bill.BillRequestDto;
-&nbsp;import com.volttrack.volttrack.dto.bill.BillResponseDto;
-&nbsp;import org.springframework.data.domain.Page;
-&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import com.volttrack.volttrack.dto.user.UserRequestDto;
+&nbsp;import com.volttrack.volttrack.dto.user.UserResponseDto;
 &nbsp;
-&nbsp;public interface BillService {
-&nbsp;
-&nbsp;
-&nbsp;    BillResponseDto createBill(BillRequestDto requestDto);
-&nbsp;
-&nbsp;    Page&lt;BillResponseDto&gt; getAllBills(Pageable pageable);
-&nbsp;
-&nbsp;    BillResponseDto getBillByPublicId(String publicId);
-&nbsp;    void deleteBillByPublicId(String publicId);
-&nbsp;
-&nbsp;    BillResponseDto generateBillForConsumer(String consumerPublicId);
-&nbsp;    Page&lt;BillResponseDto&gt; getBillsByConsumer(String consumerPublicId, Pageable pageable);
+&nbsp;public interface AuthService {
+&nbsp;    UserResponseDto register(UserRequestDto requestDto);
+&nbsp;    String login(String username, String password);
 &nbsp;}
 </code>
 </pre>
@@ -82,7 +71,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2026-03-19 17:01</div>
+    <div style="float:right;">generated on 2026-03-19 17:20</div>
 </div>
 </body>
 </html>

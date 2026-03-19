@@ -45,26 +45,26 @@ Current scope:     <a href="../../index.html">all classes</a>
   <td class="name">UserServiceImpl</td>
 <td class="coverageStat">
   <span class="percent">
-    100%
+    0%
   </span>
   <span class="absValue">
-    (12/12)
+    (0/12)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    66.7%
+    0%
   </span>
   <span class="absValue">
-    (6/9)
+    (0/9)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    96.1%
+    0%
   </span>
   <span class="absValue">
-    (74/77)
+    (0/77)
   </span>
 </td>
 </tr>
@@ -72,18 +72,18 @@ Current scope:     <a href="../../index.html">all classes</a>
     <td class="name">UserServiceImpl$1</td>
 <td class="coverageStat">
   <span class="percent">
-    100%
+    0%
   </span>
   <span class="absValue">
-    (1/1)
+    (0/1)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    100%
+    0%
   </span>
   <span class="absValue">
-    (1/1)
+    (0/1)
   </span>
 </td>
   </tr>
@@ -91,26 +91,26 @@ Current scope:     <a href="../../index.html">all classes</a>
   <td class="name"><strong>Total</strong></td>
 <td class="coverageStat">
   <span class="percent">
-    100%
+    0%
   </span>
   <span class="absValue">
-    (13/13)
+    (0/13)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    66.7%
+    0%
   </span>
   <span class="absValue">
-    (6/9)
+    (0/9)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    96.2%
+    0%
   </span>
   <span class="absValue">
-    (75/78)
+    (0/78)
   </span>
 </td>
 </tr>
@@ -139,145 +139,145 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;import lombok.extern.slf4j.Slf4j;
 &nbsp;
 &nbsp;@Service
-<b class="fc">&nbsp;@Slf4j</b>
+<b class="nc">&nbsp;@Slf4j</b>
 &nbsp;public class UserServiceImpl implements UserService {
 &nbsp;
 &nbsp;    private final UserRepository userRepository;
 &nbsp;    private final PasswordEncoder passwordEncoder;
 &nbsp;
-<b class="fc">&nbsp;    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {</b>
-<b class="fc">&nbsp;        this.userRepository = userRepository;</b>
-<b class="fc">&nbsp;        this.passwordEncoder = passwordEncoder;</b>
+<b class="nc">&nbsp;    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {</b>
+<b class="nc">&nbsp;        this.userRepository = userRepository;</b>
+<b class="nc">&nbsp;        this.passwordEncoder = passwordEncoder;</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    @Override
 &nbsp;    public UserResponseDto createUser(UserRequestDto requestDto) {
-<b class="fc">&nbsp;        log.info(&quot;Creating new user with username={} and email={}&quot;, requestDto.getUsername(), requestDto.getEmail());</b>
+<b class="nc">&nbsp;        log.info(&quot;Creating new user with username={} and email={}&quot;, requestDto.getUsername(), requestDto.getEmail());</b>
 &nbsp;
-<b class="fc">&nbsp;        Role role = Role.valueOf(requestDto.getRole().toUpperCase());</b>
+<b class="nc">&nbsp;        Role role = Role.valueOf(requestDto.getRole().toUpperCase());</b>
 &nbsp;
 &nbsp;        // Generate prefix based on role
 &nbsp;        String prefix;
-<b class="pc">&nbsp;        switch (role) {</b>
+<b class="nc">&nbsp;        switch (role) {</b>
 <b class="nc">&nbsp;            case ADMIN -&gt; prefix = &quot;ADM&quot;;</b>
 <b class="nc">&nbsp;            case OFFICER -&gt; prefix = &quot;OFF&quot;;</b>
-<b class="fc">&nbsp;            case CONSUMER -&gt; prefix = &quot;CON&quot;;</b>
+<b class="nc">&nbsp;            case CONSUMER -&gt; prefix = &quot;CON&quot;;</b>
 <b class="nc">&nbsp;            default -&gt; prefix = &quot;USR&quot;;</b>
 &nbsp;        }
 &nbsp;
-<b class="fc">&nbsp;        long count = userRepository.countByRole(role);</b>
-<b class="fc">&nbsp;        String publicId = prefix + &quot;-&quot; + (count + 1);</b>
+<b class="nc">&nbsp;        long count = userRepository.countByRole(role);</b>
+<b class="nc">&nbsp;        String publicId = prefix + &quot;-&quot; + (count + 1);</b>
 &nbsp;
-<b class="fc">&nbsp;        User user = User.builder()</b>
-<b class="fc">&nbsp;                .username(requestDto.getUsername())</b>
-<b class="fc">&nbsp;                .email(requestDto.getEmail())</b>
-<b class="fc">&nbsp;                .password(passwordEncoder.encode(requestDto.getPassword()))</b>
-<b class="fc">&nbsp;                .role(role)</b>
-<b class="pc">&nbsp;                .active(requestDto.getActive() != null ? requestDto.getActive() : true)</b>
-<b class="fc">&nbsp;                .publicId(publicId)</b>
-<b class="fc">&nbsp;                .build();</b>
+<b class="nc">&nbsp;        User user = User.builder()</b>
+<b class="nc">&nbsp;                .username(requestDto.getUsername())</b>
+<b class="nc">&nbsp;                .email(requestDto.getEmail())</b>
+<b class="nc">&nbsp;                .password(passwordEncoder.encode(requestDto.getPassword()))</b>
+<b class="nc">&nbsp;                .role(role)</b>
+<b class="nc">&nbsp;                .active(requestDto.getActive() != null ? requestDto.getActive() : true)</b>
+<b class="nc">&nbsp;                .publicId(publicId)</b>
+<b class="nc">&nbsp;                .build();</b>
 &nbsp;
-<b class="fc">&nbsp;        User saved = userRepository.save(user);</b>
-<b class="fc">&nbsp;        log.info(&quot;User created successfully with publicId={}&quot;, saved.getPublicId());</b>
+<b class="nc">&nbsp;        User saved = userRepository.save(user);</b>
+<b class="nc">&nbsp;        log.info(&quot;User created successfully with publicId={}&quot;, saved.getPublicId());</b>
 &nbsp;
-<b class="fc">&nbsp;        return toResponseDto(saved);</b>
+<b class="nc">&nbsp;        return toResponseDto(saved);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    @Override
 &nbsp;    public Page&lt;UserResponseDto&gt; getAllUsers(Pageable pageable) {
-<b class="fc">&nbsp;        log.debug(&quot;Fetching all users with pagination&quot;);</b>
-<b class="fc">&nbsp;        return userRepository.findAll(pageable).map(this::toResponseDto);</b>
+<b class="nc">&nbsp;        log.debug(&quot;Fetching all users with pagination&quot;);</b>
+<b class="nc">&nbsp;        return userRepository.findAll(pageable).map(this::toResponseDto);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    @Override
 &nbsp;    public UserResponseDto getUserById(Long id) {
-<b class="fc">&nbsp;        log.info(&quot;Fetching user with id={}&quot;, id);</b>
-<b class="fc">&nbsp;        User user = userRepository.findById(id)</b>
-<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with id: &quot; + id));</b>
-<b class="fc">&nbsp;        return toResponseDto(user);</b>
+<b class="nc">&nbsp;        log.info(&quot;Fetching user with id={}&quot;, id);</b>
+<b class="nc">&nbsp;        User user = userRepository.findById(id)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with id: &quot; + id));</b>
+<b class="nc">&nbsp;        return toResponseDto(user);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    public UserResponseDto getUserByPublicId(String publicId) {
-<b class="fc">&nbsp;        log.info(&quot;Fetching user with publicId={}&quot;, publicId);</b>
-<b class="fc">&nbsp;        User user = userRepository.findByPublicId(publicId)</b>
-<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with publicId: &quot; + publicId));</b>
-<b class="fc">&nbsp;        return toResponseDto(user);</b>
+<b class="nc">&nbsp;        log.info(&quot;Fetching user with publicId={}&quot;, publicId);</b>
+<b class="nc">&nbsp;        User user = userRepository.findByPublicId(publicId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with publicId: &quot; + publicId));</b>
+<b class="nc">&nbsp;        return toResponseDto(user);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    public void deleteUserByPublicId(String publicId) {
-<b class="fc">&nbsp;        log.info(&quot;Deleting user with publicId={}&quot;, publicId);</b>
-<b class="fc">&nbsp;        User user = userRepository.findByPublicId(publicId)</b>
-<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with publicId: &quot; + publicId));</b>
-<b class="fc">&nbsp;        userRepository.delete(user);</b>
-<b class="fc">&nbsp;        log.info(&quot;User deleted successfully with publicId={}&quot;, publicId);</b>
+<b class="nc">&nbsp;        log.info(&quot;Deleting user with publicId={}&quot;, publicId);</b>
+<b class="nc">&nbsp;        User user = userRepository.findByPublicId(publicId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with publicId: &quot; + publicId));</b>
+<b class="nc">&nbsp;        userRepository.delete(user);</b>
+<b class="nc">&nbsp;        log.info(&quot;User deleted successfully with publicId={}&quot;, publicId);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    @Override
 &nbsp;    public void deleteUser(Long id) {
-<b class="fc">&nbsp;        log.info(&quot;Deleting user with id={}&quot;, id);</b>
-<b class="fc">&nbsp;        if (!userRepository.existsById(id)) {</b>
-<b class="fc">&nbsp;            throw new ResourceNotFoundException(&quot;Cannot delete. User not found with id: &quot; + id);</b>
+<b class="nc">&nbsp;        log.info(&quot;Deleting user with id={}&quot;, id);</b>
+<b class="nc">&nbsp;        if (!userRepository.existsById(id)) {</b>
+<b class="nc">&nbsp;            throw new ResourceNotFoundException(&quot;Cannot delete. User not found with id: &quot; + id);</b>
 &nbsp;        }
-<b class="fc">&nbsp;        userRepository.deleteById(id);</b>
-<b class="fc">&nbsp;        log.info(&quot;User deleted successfully with id={}&quot;, id);</b>
+<b class="nc">&nbsp;        userRepository.deleteById(id);</b>
+<b class="nc">&nbsp;        log.info(&quot;User deleted successfully with id={}&quot;, id);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    @Override
 &nbsp;    public UserResponseDto createConsumerActive(UserRequestDto requestDto) {
-<b class="fc">&nbsp;        log.info(&quot;Creating consumer with email={}&quot;, requestDto.getEmail());</b>
+<b class="nc">&nbsp;        log.info(&quot;Creating consumer with email={}&quot;, requestDto.getEmail());</b>
 &nbsp;
-<b class="fc">&nbsp;        if (userRepository.existsByEmail(requestDto.getEmail())) {</b>
-<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Email already in use: &quot; + requestDto.getEmail());</b>
+<b class="nc">&nbsp;        if (userRepository.existsByEmail(requestDto.getEmail())) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Email already in use: &quot; + requestDto.getEmail());</b>
 &nbsp;        }
 &nbsp;
-<b class="fc">&nbsp;        long count = userRepository.countByRole(Role.CONSUMER);</b>
-<b class="fc">&nbsp;        String publicId = &quot;CON-&quot; + (count + 1);</b>
+<b class="nc">&nbsp;        long count = userRepository.countByRole(Role.CONSUMER);</b>
+<b class="nc">&nbsp;        String publicId = &quot;CON-&quot; + (count + 1);</b>
 &nbsp;
-<b class="fc">&nbsp;        User consumer = User.builder()</b>
-<b class="fc">&nbsp;                .username(requestDto.getUsername())</b>
-<b class="fc">&nbsp;                .email(requestDto.getEmail())</b>
-<b class="fc">&nbsp;                .password(passwordEncoder.encode(requestDto.getPassword()))</b>
-<b class="fc">&nbsp;                .role(Role.CONSUMER)</b>
-<b class="fc">&nbsp;                .active(true)</b>
-<b class="fc">&nbsp;                .publicId(publicId)</b>
-<b class="fc">&nbsp;                .build();</b>
+<b class="nc">&nbsp;        User consumer = User.builder()</b>
+<b class="nc">&nbsp;                .username(requestDto.getUsername())</b>
+<b class="nc">&nbsp;                .email(requestDto.getEmail())</b>
+<b class="nc">&nbsp;                .password(passwordEncoder.encode(requestDto.getPassword()))</b>
+<b class="nc">&nbsp;                .role(Role.CONSUMER)</b>
+<b class="nc">&nbsp;                .active(true)</b>
+<b class="nc">&nbsp;                .publicId(publicId)</b>
+<b class="nc">&nbsp;                .build();</b>
 &nbsp;
-<b class="fc">&nbsp;        User saved = userRepository.save(consumer);</b>
-<b class="fc">&nbsp;        log.info(&quot;Consumer created successfully with publicId={}&quot;, saved.getPublicId());</b>
+<b class="nc">&nbsp;        User saved = userRepository.save(consumer);</b>
+<b class="nc">&nbsp;        log.info(&quot;Consumer created successfully with publicId={}&quot;, saved.getPublicId());</b>
 &nbsp;
-<b class="fc">&nbsp;        return toResponseDto(saved);</b>
+<b class="nc">&nbsp;        return toResponseDto(saved);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    @Override
 &nbsp;    public Page&lt;UserResponseDto&gt; getConsumers(Pageable pageable) {
-<b class="fc">&nbsp;        log.debug(&quot;Fetching all consumers with pagination&quot;);</b>
-<b class="fc">&nbsp;        return userRepository.findByRole(Role.CONSUMER, pageable).map(this::toResponseDto);</b>
+<b class="nc">&nbsp;        log.debug(&quot;Fetching all consumers with pagination&quot;);</b>
+<b class="nc">&nbsp;        return userRepository.findByRole(Role.CONSUMER, pageable).map(this::toResponseDto);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;    @Override
 &nbsp;    public UserResponseDto approveOfficer(String publicId) {
-<b class="fc">&nbsp;        log.info(&quot;Approving officer with publicId={}&quot;, publicId);</b>
+<b class="nc">&nbsp;        log.info(&quot;Approving officer with publicId={}&quot;, publicId);</b>
 &nbsp;
-<b class="fc">&nbsp;        User officer = userRepository.findByPublicId(publicId)</b>
-<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Officer not found with publicId: &quot; + publicId));</b>
+<b class="nc">&nbsp;        User officer = userRepository.findByPublicId(publicId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Officer not found with publicId: &quot; + publicId));</b>
 &nbsp;
-<b class="fc">&nbsp;        officer.setActive(true);</b>
-<b class="fc">&nbsp;        User saved = userRepository.save(officer);</b>
+<b class="nc">&nbsp;        officer.setActive(true);</b>
+<b class="nc">&nbsp;        User saved = userRepository.save(officer);</b>
 &nbsp;
-<b class="fc">&nbsp;        log.info(&quot;Officer approved successfully with publicId={}&quot;, publicId);</b>
-<b class="fc">&nbsp;        return toResponseDto(saved);</b>
+<b class="nc">&nbsp;        log.info(&quot;Officer approved successfully with publicId={}&quot;, publicId);</b>
+<b class="nc">&nbsp;        return toResponseDto(saved);</b>
 &nbsp;    }
 &nbsp;
 &nbsp;
 &nbsp;    private UserResponseDto toResponseDto(User user) {
-<b class="fc">&nbsp;        return UserResponseDto.builder()</b>
-<b class="fc">&nbsp;                .id(user.getId())</b>
-<b class="fc">&nbsp;                .publicId(user.getPublicId())</b>
-<b class="fc">&nbsp;                .username(user.getUsername())</b>
-<b class="fc">&nbsp;                .email(user.getEmail())</b>
-<b class="fc">&nbsp;                .role(user.getRole().name())</b>
-<b class="fc">&nbsp;                .active(user.getActive())</b>
-<b class="fc">&nbsp;                .build();</b>
+<b class="nc">&nbsp;        return UserResponseDto.builder()</b>
+<b class="nc">&nbsp;                .id(user.getId())</b>
+<b class="nc">&nbsp;                .publicId(user.getPublicId())</b>
+<b class="nc">&nbsp;                .username(user.getUsername())</b>
+<b class="nc">&nbsp;                .email(user.getEmail())</b>
+<b class="nc">&nbsp;                .role(user.getRole().name())</b>
+<b class="nc">&nbsp;                .active(user.getActive())</b>
+<b class="nc">&nbsp;                .build();</b>
 &nbsp;    }
 &nbsp;}
 </code>
@@ -303,7 +303,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2026-03-19 17:01</div>
+    <div style="float:right;">generated on 2026-03-19 17:20</div>
 </div>
 </body>
 </html>
