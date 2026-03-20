@@ -1,0 +1,187 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OfficerDashboardController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.volttrack.volttrack.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: OfficerDashboardController (com.volttrack.volttrack.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OfficerDashboardController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">OfficerDashboardController$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.volttrack.volttrack.controller;
+&nbsp;
+&nbsp;import com.volttrack.volttrack.dto.alert.AlertRequestDto;
+&nbsp;import com.volttrack.volttrack.dto.alert.AlertResponseDto;
+&nbsp;import com.volttrack.volttrack.dto.bill.BillResponseDto;
+&nbsp;import com.volttrack.volttrack.dto.meter.MeterRequestDto;
+&nbsp;import com.volttrack.volttrack.dto.meter.MeterResponseDto;
+&nbsp;import com.volttrack.volttrack.dto.user.UserRequestDto;
+&nbsp;import com.volttrack.volttrack.dto.user.UserResponseDto;
+&nbsp;import com.volttrack.volttrack.service.AlertService;
+&nbsp;import com.volttrack.volttrack.service.BillService;
+&nbsp;import com.volttrack.volttrack.service.MeterService;
+&nbsp;import com.volttrack.volttrack.service.UserService;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.security.access.prepost.PreAuthorize;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/officer/dashboard&quot;)
+&nbsp;@PreAuthorize(&quot;hasRole(&#39;OFFICER&#39;)&quot;)
+&nbsp;public class OfficerDashboardController {
+&nbsp;
+&nbsp;    private final UserService userService;
+&nbsp;    private final MeterService meterService;
+&nbsp;    private final BillService billService;
+&nbsp;    private final AlertService alertService;
+&nbsp;
+&nbsp;    public OfficerDashboardController(UserService userService,
+&nbsp;                                      MeterService meterService,
+&nbsp;                                      BillService billService,
+<b class="fc">&nbsp;                                      AlertService alertService) {</b>
+<b class="fc">&nbsp;        this.userService = userService;</b>
+<b class="fc">&nbsp;        this.meterService = meterService;</b>
+<b class="fc">&nbsp;        this.billService = billService;</b>
+<b class="fc">&nbsp;        this.alertService = alertService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // 🔹 Consumer Management
+&nbsp;    @PostMapping(&quot;/consumers&quot;)
+&nbsp;    public ResponseEntity&lt;UserResponseDto&gt; createConsumer(@RequestBody UserRequestDto dto) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(userService.createConsumerActive(dto));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/consumers&quot;)
+&nbsp;    public ResponseEntity&lt;Page&lt;UserResponseDto&gt;&gt; getConsumers(Pageable pageable) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(userService.getConsumers(pageable));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // 🔹 Meter Management
+&nbsp;    @PostMapping(&quot;/meters/assign/{consumerPublicId}&quot;)
+&nbsp;    public ResponseEntity&lt;MeterResponseDto&gt; assignMeter(@PathVariable String consumerPublicId,
+&nbsp;                                                        @RequestBody MeterRequestDto dto) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(meterService.assignMeterToConsumer(consumerPublicId, dto));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // 🔹 Billing
+&nbsp;    @PostMapping(&quot;/bills/{consumerPublicId}&quot;)
+&nbsp;    public ResponseEntity&lt;BillResponseDto&gt; generateBill(@PathVariable String consumerPublicId) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(billService.generateBillForConsumer(consumerPublicId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // 🔹 Alerts
+&nbsp;    @PostMapping(&quot;/alerts/{consumerPublicId}&quot;)
+&nbsp;    public ResponseEntity&lt;AlertResponseDto&gt; createAlert(@PathVariable String consumerPublicId,
+&nbsp;                                                        @RequestBody AlertRequestDto dto) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(alertService.createAlertForConsumer(consumerPublicId, dto));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-20 22:19</div>
+</div>
+</body>
+</html>

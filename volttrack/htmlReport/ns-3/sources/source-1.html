@@ -1,0 +1,242 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AdminDashboardController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.volttrack.volttrack.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: AdminDashboardController (com.volttrack.volttrack.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AdminDashboardController</td>
+<td class="coverageStat">
+  <span class="percent">
+    46.2%
+  </span>
+  <span class="absValue">
+    (6/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    55.6%
+  </span>
+  <span class="absValue">
+    (10/18)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">AdminDashboardController$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    46.2%
+  </span>
+  <span class="absValue">
+    (6/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    55.6%
+  </span>
+  <span class="absValue">
+    (10/18)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.volttrack.volttrack.controller;
+&nbsp;
+&nbsp;import com.volttrack.volttrack.dto.user.UserResponseDto;
+&nbsp;import com.volttrack.volttrack.dto.meter.MeterResponseDto;
+&nbsp;import com.volttrack.volttrack.dto.bill.BillResponseDto;
+&nbsp;import com.volttrack.volttrack.dto.alert.AlertResponseDto;
+&nbsp;import com.volttrack.volttrack.service.UserService;
+&nbsp;import com.volttrack.volttrack.service.MeterService;
+&nbsp;import com.volttrack.volttrack.service.BillService;
+&nbsp;import com.volttrack.volttrack.service.AlertService;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.security.access.prepost.PreAuthorize;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/admin/dashboard&quot;)
+&nbsp;@PreAuthorize(&quot;hasRole(&#39;ADMIN&#39;)&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class AdminDashboardController {
+&nbsp;
+&nbsp;    private final UserService userService;
+&nbsp;    private final MeterService meterService;
+&nbsp;    private final BillService billService;
+&nbsp;    private final AlertService alertService;
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get all users&quot;, description = &quot;Retrieve a paginated list of all registered users&quot;)
+&nbsp;    @ApiResponse(responseCode = &quot;200&quot;, description = &quot;List of users retrieved successfully&quot;)
+&nbsp;    @GetMapping(&quot;/users&quot;)
+&nbsp;    public ResponseEntity&lt;Page&lt;UserResponseDto&gt;&gt; getAllUsers(Pageable pageable) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(userService.getAllUsers(pageable));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get user by publicId&quot;, description = &quot;Retrieve details of a specific user by their publicId&quot;)
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;User found&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found&quot;)
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/users/{publicId}&quot;)
+&nbsp;    public ResponseEntity&lt;UserResponseDto&gt; getUserByPublicId(@PathVariable String publicId) {
+<b class="nc">&nbsp;        return ResponseEntity.ok(userService.getUserByPublicId(publicId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Delete user&quot;, description = &quot;Delete a user by their publicId&quot;)
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;204&quot;, description = &quot;User deleted successfully&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found&quot;)
+&nbsp;    })
+&nbsp;    @DeleteMapping(&quot;/users/{publicId}&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; deleteUser(@PathVariable String publicId) {
+<b class="nc">&nbsp;        userService.deleteUserByPublicId(publicId);</b>
+<b class="nc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Approve officer&quot;, description = &quot;Admin approves an officer by setting active=true&quot;)
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Officer approved successfully&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized - only ADMIN can approve&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Officer not found&quot;)
+&nbsp;    })
+&nbsp;    @PutMapping(&quot;/users/{publicId}/approve&quot;)
+&nbsp;    public ResponseEntity&lt;UserResponseDto&gt; approveOfficer(@PathVariable String publicId) {
+<b class="fc">&nbsp;        UserResponseDto approved = userService.approveOfficer(publicId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(approved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get all meters&quot;, description = &quot;Retrieve a paginated list of all meters&quot;)
+&nbsp;    @GetMapping(&quot;/meters&quot;)
+&nbsp;    public ResponseEntity&lt;Page&lt;MeterResponseDto&gt;&gt; getAllMeters(Pageable pageable) {
+<b class="nc">&nbsp;        return ResponseEntity.ok(meterService.getAllMeters(pageable));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get meter by publicId&quot;, description = &quot;Retrieve details of a specific meter by its publicId&quot;)
+&nbsp;    @GetMapping(&quot;/meters/{publicId}&quot;)
+&nbsp;    public ResponseEntity&lt;MeterResponseDto&gt; getMeterByPublicId(@PathVariable String publicId) {
+<b class="nc">&nbsp;        return ResponseEntity.ok(meterService.getMeterByPublicId(publicId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Delete meter&quot;, description = &quot;Delete a meter by its publicId&quot;)
+&nbsp;    @DeleteMapping(&quot;/meters/{publicId}&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; deleteMeter(@PathVariable String publicId) {
+<b class="fc">&nbsp;        meterService.deleteMeterByPublicId(publicId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get all bills&quot;, description = &quot;Retrieve a paginated list of all bills&quot;)
+&nbsp;    @GetMapping(&quot;/bills&quot;)
+&nbsp;    public ResponseEntity&lt;Page&lt;BillResponseDto&gt;&gt; getAllBills(Pageable pageable) {
+<b class="nc">&nbsp;        return ResponseEntity.ok(billService.getAllBills(pageable));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get bill by publicId&quot;, description = &quot;Retrieve details of a specific bill by its publicId&quot;)
+&nbsp;    @GetMapping(&quot;/bills/{publicId}&quot;)
+&nbsp;    public ResponseEntity&lt;BillResponseDto&gt; getBillByPublicId(@PathVariable String publicId) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(billService.getBillByPublicId(publicId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Delete bill&quot;, description = &quot;Delete a bill by its publicId&quot;)
+&nbsp;    @DeleteMapping(&quot;/bills/{publicId}&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; deleteBill(@PathVariable String publicId) {
+<b class="fc">&nbsp;        billService.deleteBillByPublicId(publicId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get all alerts&quot;, description = &quot;Retrieve a paginated list of all alerts&quot;)
+&nbsp;    @GetMapping(&quot;/alerts&quot;)
+&nbsp;    public ResponseEntity&lt;Page&lt;AlertResponseDto&gt;&gt; getAllAlerts(Pageable pageable) {
+<b class="nc">&nbsp;        return ResponseEntity.ok(alertService.getAllAlerts(pageable));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get alert by publicId&quot;, description = &quot;Retrieve details of a specific alert by its publicId&quot;)
+&nbsp;    @GetMapping(&quot;/alerts/{publicId}&quot;)
+&nbsp;    public ResponseEntity&lt;AlertResponseDto&gt; getAlertByPublicId(@PathVariable String publicId) {
+<b class="nc">&nbsp;        return ResponseEntity.ok(alertService.getAlertByPublicId(publicId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Delete alert&quot;, description = &quot;Delete an alert by its publicId&quot;)
+&nbsp;    @DeleteMapping(&quot;/alerts/{publicId}&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; deleteAlert(@PathVariable String publicId) {
+<b class="fc">&nbsp;        alertService.deleteAlertByPublicId(publicId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-20 22:19</div>
+</div>
+</body>
+</html>

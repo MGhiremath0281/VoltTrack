@@ -1,0 +1,184 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.volttrack.volttrack.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: UserController (com.volttrack.volttrack.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">UserController$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.volttrack.volttrack.controller;
+&nbsp;
+&nbsp;import com.volttrack.volttrack.dto.user.UserRequestDto;
+&nbsp;import com.volttrack.volttrack.dto.user.UserResponseDto;
+&nbsp;import com.volttrack.volttrack.service.UserService;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.security.access.prepost.PreAuthorize;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/users&quot;)
+&nbsp;public class UserController {
+&nbsp;
+&nbsp;    private final UserService userService;
+&nbsp;
+<b class="fc">&nbsp;    public UserController(UserService userService) {</b>
+<b class="fc">&nbsp;        this.userService = userService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Create user&quot;, description = &quot;Create a new user. Accessible by ADMIN and OFFICER roles.&quot;)
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;User created successfully&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid request data&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized - requires ADMIN or OFFICER role&quot;)
+&nbsp;    })
+&nbsp;    @PostMapping
+&nbsp;    @PreAuthorize(&quot;hasRole(&#39;ADMIN&#39;) or hasRole(&#39;OFFICER&#39;)&quot;)
+&nbsp;    public ResponseEntity&lt;UserResponseDto&gt; createUser(@Valid @RequestBody UserRequestDto requestDto) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(userService.createUser(requestDto));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get all users&quot;, description = &quot;Retrieve a paginated list of all users. Accessible by ADMIN and OFFICER.&quot;)
+&nbsp;    @ApiResponse(responseCode = &quot;200&quot;, description = &quot;List of users retrieved successfully&quot;)
+&nbsp;    @GetMapping
+&nbsp;    @PreAuthorize(&quot;hasAnyRole(&#39;ADMIN&#39;,&#39;OFFICER&#39;)&quot;)
+&nbsp;    public ResponseEntity&lt;Page&lt;UserResponseDto&gt;&gt; getAllUsers(Pageable pageable) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(userService.getAllUsers(pageable));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Get user by publicId&quot;, description = &quot;Retrieve a specific user by publicId (ADM-1, OFF-1, CON-1). Accessible by ADMIN, OFFICER, or the user themselves.&quot;)
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;User found&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized access&quot;)
+&nbsp;    })
+&nbsp;    @GetMapping(&quot;/{publicId}&quot;)
+&nbsp;    @PreAuthorize(&quot;hasRole(&#39;ADMIN&#39;) or hasRole(&#39;OFFICER&#39;) or #publicId == authentication.principal.publicId&quot;)
+&nbsp;    public ResponseEntity&lt;UserResponseDto&gt; getUserByPublicId(@PathVariable String publicId) {
+<b class="fc">&nbsp;        return ResponseEntity.ok(userService.getUserByPublicId(publicId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Operation(summary = &quot;Delete user&quot;, description = &quot;Delete a user by publicId. Only ADMIN can delete users.&quot;)
+&nbsp;    @ApiResponses({
+&nbsp;            @ApiResponse(responseCode = &quot;204&quot;, description = &quot;User deleted successfully&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized - requires ADMIN role&quot;)
+&nbsp;    })
+&nbsp;    @DeleteMapping(&quot;/{publicId}&quot;)
+&nbsp;    @PreAuthorize(&quot;hasRole(&#39;ADMIN&#39;)&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; deleteUser(@PathVariable String publicId) {
+<b class="fc">&nbsp;        userService.deleteUserByPublicId(publicId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-20 22:19</div>
+</div>
+</body>
+</html>
