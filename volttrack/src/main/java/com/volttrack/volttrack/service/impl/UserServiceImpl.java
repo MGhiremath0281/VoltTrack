@@ -1,5 +1,7 @@
 package com.volttrack.volttrack.service.impl;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +35,6 @@ public class UserServiceImpl implements UserService {
 
         Role role = Role.valueOf(requestDto.getRole().toUpperCase());
 
-        // Generate prefix based on role
         String prefix;
         switch (role) {
             case ADMIN -> prefix = "ADM";
@@ -67,6 +68,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users", key = "#id")
     public UserResponseDto getUserById(Long id) {
         log.info("Fetching user with id={}", id);
         User user = userRepository.findById(id)
@@ -74,6 +76,7 @@ public class UserServiceImpl implements UserService {
         return toResponseDto(user);
     }
 
+    @Cacheable(value = "users", key = "#publicId")
     public UserResponseDto getUserByPublicId(String publicId) {
         log.info("Fetching user with publicId={}", publicId);
         User user = userRepository.findByPublicId(publicId)
@@ -81,6 +84,7 @@ public class UserServiceImpl implements UserService {
         return toResponseDto(user);
     }
 
+    @CacheEvict(value = "users", key = "#publicId")
     public void deleteUserByPublicId(String publicId) {
         log.info("Deleting user with publicId={}", publicId);
         User user = userRepository.findByPublicId(publicId)
@@ -90,6 +94,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "users", key = "#id")
     public void deleteUser(Long id) {
         log.info("Deleting user with id={}", id);
         if (!userRepository.existsById(id)) {
@@ -132,6 +137,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "users", key = "#publicId")
     public UserResponseDto approveOfficer(String publicId) {
         log.info("Approving officer with publicId={}", publicId);
 
@@ -144,7 +150,6 @@ public class UserServiceImpl implements UserService {
         log.info("Officer approved successfully with publicId={}", publicId);
         return toResponseDto(saved);
     }
-
 
     private UserResponseDto toResponseDto(User user) {
         return UserResponseDto.builder()
