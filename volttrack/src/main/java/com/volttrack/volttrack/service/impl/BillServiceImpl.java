@@ -5,9 +5,13 @@ import java.util.UUID;
 
 import com.volttrack.volttrack.entity.enums.BillStatus;
 import com.volttrack.volttrack.entity.enums.BillingCycle;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.volttrack.volttrack.dto.bill.BillRequestDto;
 import com.volttrack.volttrack.dto.bill.BillResponseDto;
@@ -39,8 +43,9 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = {"allBills", "billsByConsumer"}, allEntries = true)
     public BillResponseDto createBill(BillRequestDto requestDto) {
-
         log.info("Creating bill for meterPublicId={}", requestDto.getMeterPublicId());
 
         Meter meter = meterRepository.findByPublicId(requestDto.getMeterPublicId())
@@ -49,41 +54,45 @@ public class BillServiceImpl implements BillService {
                 );
 
         User consumer = meter.getUser();
-
         return generateBill(meter, consumer);
     }
 
     @Override
+    @Cacheable(value = "allBills", key = "#pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<BillResponseDto> getAllBills(Pageable pageable) {
         return billRepository.findAll(pageable).map(this::toResponseDto);
     }
 
     @Override
+    @Cacheable(value = "billsByPublicId", key = "#publicId")
     public BillResponseDto getBillByPublicId(String publicId) {
-
         Bill bill = billRepository.findByPublicId(publicId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Bill not found with publicId: " + publicId)
                 );
-
         return toResponseDto(bill);
     }
 
     @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "billsByPublicId", key = "#publicId"),
+            @CacheEvict(value = "allBills", allEntries = true),
+            @CacheEvict(value = "billsByConsumer", allEntries = true)
+    })
     public void deleteBillByPublicId(String publicId) {
-
         Bill bill = billRepository.findByPublicId(publicId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Bill not found with publicId: " + publicId)
                 );
-
         billRepository.delete(bill);
         log.info("Bill deleted successfully with publicId={}", publicId);
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = {"allBills", "billsByConsumer"}, allEntries = true)
     public BillResponseDto generateBillForConsumer(String consumerPublicId) {
-
         log.info("Generating bill for consumerPublicId={}", consumerPublicId);
 
         User consumer = userRepository.findByPublicId(consumerPublicId)
@@ -96,17 +105,12 @@ public class BillServiceImpl implements BillService {
                         new ResourceNotFoundException("No meter found for consumerPublicId: " + consumerPublicId)
                 );
 
-        BillResponseDto bill = generateBill(meter, consumer);
-
-        log.info("Bill generated successfully for consumerPublicId={} with billPublicId={}",
-                consumerPublicId, bill.getPublicId());
-
-        return bill;
+        return generateBill(meter, consumer);
     }
 
     @Override
+    @Cacheable(value = "billsByConsumer", key = "#consumerPublicId + '_' + #pageable.pageNumber")
     public Page<BillResponseDto> getBillsByConsumer(String consumerPublicId, Pageable pageable) {
-
         User consumer = userRepository.findByPublicId(consumerPublicId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId)
@@ -117,7 +121,6 @@ public class BillServiceImpl implements BillService {
     }
 
     private BillResponseDto generateBill(Meter meter, User consumer) {
-
         MeterReading opening = meterReadingRepository
                 .findTopByMeter_IdOrderByTimestampAsc(meter.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("No readings found for meter"));
@@ -140,8 +143,7 @@ public class BillServiceImpl implements BillService {
         Double totalAmount = baseAmount + fixedCharges + taxAmount;
 
         LocalDateTime now = LocalDateTime.now();
-
-        String publicId = "BILL-" + UUID.randomUUID().toString().substring(0, 8);
+        String publicId = "BILL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
         Bill bill = Bill.builder()
                 .publicId(publicId)
@@ -163,9 +165,6 @@ public class BillServiceImpl implements BillService {
                 .build();
 
         Bill saved = billRepository.save(bill);
-
-        log.info("Bill generated successfully with publicId={}", saved.getPublicId());
-
         return toResponseDto(saved);
     }
 
