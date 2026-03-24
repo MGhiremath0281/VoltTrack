@@ -14,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -36,8 +38,8 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-
     @Override
+    @CacheEvict(value = "usersByEmail", key = "#requestDto.email")
     public UserResponseDto register(UserRequestDto requestDto) {
 
         Role roleEnum;
@@ -47,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid role provided");
         }
 
-        if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
+        if (isEmailExists(requestDto.getEmail())) {
             throw new RuntimeException("Email already registered");
         }
 
@@ -57,7 +59,6 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(requestDto.getPassword()))
                 .role(roleEnum)
                 .active(true)
-                // 🔥 Optional safety (in case @PrePersist is removed)
                 .publicId(generatePublicId(roleEnum))
                 .build();
 
@@ -74,6 +75,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Cacheable(value = "userTokens", key = "#username")
     public String login(String username, String password) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -87,6 +89,12 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid username or password");
         }
     }
+
+    @Cacheable(value = "usersByEmail", key = "#email")
+    public boolean isEmailExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
 
     private String generatePublicId(Role role) {
         String prefix = switch (role) {
