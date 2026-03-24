@@ -11,9 +11,13 @@ import com.volttrack.volttrack.repository.UserRepository;
 import com.volttrack.volttrack.service.MeterService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -28,8 +32,9 @@ public class MeterServiceImpl implements MeterService {
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "metersList", allEntries = true)
     public MeterResponseDto createMeter(MeterRequestDto requestDto) {
-
         log.info("Creating meter for userPublicId={}", requestDto.getUserPublicId());
 
         User user = userRepository.findByPublicId(requestDto.getUserPublicId())
@@ -44,54 +49,60 @@ public class MeterServiceImpl implements MeterService {
                 .build();
 
         Meter saved = meterRepository.save(meter);
-
-        log.info("Meter created successfully with publicId={} and meterId={}",
-                saved.getPublicId(), saved.getMeterId());
-
         return toResponseDto(saved);
     }
 
     @Override
+    @Cacheable(value = "metersList", key = "#pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<MeterResponseDto> getAllMeters(Pageable pageable) {
-        return meterRepository.findAll(pageable)
-                .map(this::toResponseDto);
+        return meterRepository.findAll(pageable).map(this::toResponseDto);
     }
 
     @Override
+    @Cacheable(value = "metersById", key = "#id")
     public MeterResponseDto getMeterById(Long id) {
-        Meter meter = meterRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Meter not found with id: " + id));
-        return toResponseDto(meter);
+        return meterRepository.findById(id)
+                .map(this::toResponseDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with id: " + id));
     }
 
     @Override
+    @Cacheable(value = "metersByPublicId", key = "#publicId")
     public MeterResponseDto getMeterByPublicId(String publicId) {
-        Meter meter = meterRepository.findByPublicId(publicId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Meter not found with publicId: " + publicId));
-        return toResponseDto(meter);
+        return meterRepository.findByPublicId(publicId)
+                .map(this::toResponseDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with publicId: " + publicId));
     }
 
     @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "metersByPublicId", key = "#publicId"),
+            @CacheEvict(value = "metersList", allEntries = true)
+    })
     public void deleteMeterByPublicId(String publicId) {
         Meter meter = meterRepository.findByPublicId(publicId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Meter not found with publicId: " + publicId));
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found"));
         meterRepository.delete(meter);
     }
 
     @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "metersById", key = "#id"),
+            @CacheEvict(value = "metersList", allEntries = true)
+    })
     public void deleteMeter(Long id) {
         if (!meterRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Meter not found with id: " + id);
+            throw new ResourceNotFoundException("Meter not found");
         }
         meterRepository.deleteById(id);
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "metersList", allEntries = true)
     public MeterResponseDto assignMeterToConsumer(String consumerPublicId, MeterRequestDto requestDto) {
-
         User consumer = userRepository.findByPublicId(consumerPublicId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
@@ -104,7 +115,6 @@ public class MeterServiceImpl implements MeterService {
                 .build();
 
         Meter saved = meterRepository.save(meter);
-
         return toResponseDto(saved);
     }
 
