@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class MeterReadingDTO {
 
-    private String publicId;   // ✅ exposed ID
+    private String publicId;  
 
     @NotBlank(message = "Meter Public ID is required")
     private String meterPublicId;

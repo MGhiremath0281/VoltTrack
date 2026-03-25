@@ -18,7 +18,6 @@ public class MeterReadingController {
     private final MeterReadingService meterReadingService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER')")
     public ResponseEntity<MeterReadingDTO> createReading(@Valid @RequestBody MeterReadingDTO dto) {
         return ResponseEntity.ok(meterReadingService.saveReading(dto));
     }

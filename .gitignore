@@ -13,3 +13,6 @@ target/
 # Log files
 logs/
 *.log
+
+# Shell scripts
+*.sh
