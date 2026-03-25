@@ -25,9 +25,12 @@ const Navbar = () => {
 
         {/* CTA Actions */}
         <div className="nav-actions">
+          {/* Consumer Login now routes to /consumer-login */}
           <Link to="/consumer-login" className="btn-nav-outline">
-           Consumer Login
+            Consumer Login
           </Link>
+
+          {/* Officer Login placeholder */}
           <Link to="/officer-portal" className="btn-nav-dark">
             <Shield size={16} />
             <span>Officer Login</span>

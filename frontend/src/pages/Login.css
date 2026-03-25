@@ -1,0 +1,88 @@
+/* Login.css - Refined Logic Section */
+
+.login-container {
+  max-width: 420px;
+  margin: 80px auto;
+  padding: 3rem 2.5rem; /* More vertical breathing room */
+  background: #ffffff;
+  border-radius: 16px; /* Smoother corners */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05); /* Softer, high-end shadow */
+  text-align: center;
+}
+
+.login-container h1 {
+  font-size: 2.2rem;
+  margin-bottom: 2rem;
+  color: #2563eb;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.login-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* This fixes the alignment issue from the screenshot */
+.login-container .form-group {
+  display: flex;
+  flex-direction: column; /* Stacked labels look much cleaner than side-by-side */
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.login-container label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-left: 2px;
+}
+
+.login-container input {
+  padding: 0.8rem 1rem;
+  background: #f8fafc; /* Very subtle light blue-grey background */
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+.login-container input:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.login-container button {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.login-container button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+}
+
+.login-container button:active {
+  transform: translateY(0);
+}
+
+.login-container p {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #dc2626;
+  font-weight: 500;
+}

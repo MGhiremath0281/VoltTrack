@@ -4,6 +4,7 @@ import BlockDiagram from "../assets/Block.jpeg";
 import Meter from "../assets/meter.jpeg";
 import LaptopGateway from "../assets/gateway.jpeg";
 
+
 import { Zap, ShieldCheck, Activity, Cpu, BarChart3, Timer, Layers, Laptop } from "lucide-react";
 import "../App.css";
 
