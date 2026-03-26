@@ -1,5 +1,7 @@
 package com.volttrack.volttrack.service.impl;
 
+import com.volttrack.volttrack.entity.User;
+import com.volttrack.volttrack.repository.UserRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -19,6 +21,8 @@ import com.volttrack.volttrack.service.MeterReadingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,6 +32,7 @@ public class MeterReadingServiceImpl implements MeterReadingService {
 
     private final MeterReadingRepository meterReadingRepository;
     private final MeterRepository meterRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -89,6 +94,50 @@ public class MeterReadingServiceImpl implements MeterReadingService {
                         new ResourceNotFoundException("Meter reading not found with publicId: " + readingPublicId)
                 );
         meterReadingRepository.delete(reading);
+    }
+
+    @Override
+    public List<MeterReadingDTO> getReadingsByUserPublicId(String publicId) {
+
+        User user = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Meter> meters = meterRepository.findByUser(user);
+
+        List<MeterReadingDTO> result = new ArrayList<>();
+
+        for (Meter meter : meters) {
+
+            meterReadingRepository
+                    .findTopByMeter_IdOrderByTimestampDesc(meter.getId())
+                    .ifPresent(reading -> result.add(toDTO(reading)));
+        }
+
+        return result;
+    }
+
+    @Override
+    public MeterReadingDTO saveReadingForUser(MeterReadingDTO dto, String publicId) {
+
+        User user = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Meter meter = meterRepository.findByPublicId(dto.getMeterPublicId())
+                .orElseThrow(() -> new RuntimeException("Meter not found"));
+
+        // 🔐 Ownership check
+        if (!meter.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        MeterReading reading = new MeterReading();
+        reading.setMeter(meter);
+        reading.setUnitsConsumed(dto.getUnitsConsumed());
+        reading.setTimestamp(dto.getTimestamp());
+
+        MeterReading saved = meterReadingRepository.save(reading);
+
+        return toDTO(saved);
     }
 
     private MeterReadingDTO toDTO(MeterReading entity) {

@@ -7,8 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @RestController
 @RequestMapping("/api/meter-readings")
@@ -16,10 +18,16 @@ import org.springframework.web.bind.annotation.*;
 public class MeterReadingController {
 
     private final MeterReadingService meterReadingService;
+    private final SimpMessagingTemplate messagingTemplate; 
 
     @PostMapping
     public ResponseEntity<MeterReadingDTO> createReading(@Valid @RequestBody MeterReadingDTO dto) {
-        return ResponseEntity.ok(meterReadingService.saveReading(dto));
+        MeterReadingDTO saved = meterReadingService.saveReading(dto);
+
+        // Broadcast to WebSocket subscribers
+        messagingTemplate.convertAndSend("/topic/meter-readings", saved);
+
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping("/{readingPublicId}")
