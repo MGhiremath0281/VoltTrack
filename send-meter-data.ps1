@@ -1,4 +1,4 @@
-$URL = "http://localhost:8080/api/readings"
+$URL = "http://localhost:8080/api/meter-readings"
 
 $PULSE = 1000
 $UNITS = 50.0

@@ -35,15 +35,15 @@ protected void doFilterInternal(HttpServletRequest request,
 
     String path = request.getRequestURI();
 
-    // ✅ SKIP JWT for public endpoints
-    if (path.startsWith("/api/auth") ||
-        path.startsWith("/api/readings") ||
-        path.startsWith("/swagger-ui") ||
-        path.startsWith("/v3/api-docs")) {
+if (path.contains("/api/auth") ||
+    path.contains("/api/meter-readings") ||
+    path.contains("/swagger-ui") ||
+    path.contains("/v3/api-docs")) {
 
-        chain.doFilter(request, response);
-        return;
-    }
+    chain.doFilter(request, response);
+    return;
+}
+System.out.println("Request Path: " + path);
 
     final String authHeader = request.getHeader("Authorization");
     String username = null;
