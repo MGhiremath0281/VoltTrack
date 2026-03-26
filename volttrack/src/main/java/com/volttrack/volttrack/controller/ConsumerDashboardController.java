@@ -8,7 +8,8 @@ import com.volttrack.volttrack.service.UserService;
 import com.volttrack.volttrack.service.MeterService;
 import com.volttrack.volttrack.service.MeterReadingService;
 import com.volttrack.volttrack.service.BillService;
-import com.volttrack.volttrack.security.CustomUserPrincipal;
+import com.volttrack.volttrack.security.CustomUserDetails;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,71 +31,88 @@ public class ConsumerDashboardController {
     private final BillService billService;
     private final SimpMessagingTemplate messagingTemplate;
 
+    private String getPublicId(Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails user) {
+            return user.getPublicId();
+        }
+
+        throw new RuntimeException("Invalid user principal");
+    }
+
     /**
-     * Get consumer profile (name, publicId, etc.)
+     * Get consumer profile
      */
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserResponseDto> getProfile(Authentication authentication) {
-        String publicId = ((CustomUserPrincipal) authentication.getPrincipal()).getPublicId();
+        String publicId = getPublicId(authentication);
         return ResponseEntity.ok(userService.getUserByPublicId(publicId));
     }
 
     /**
-     * Get all meters for authenticated consumer
+     * Get all meters
      */
     @GetMapping("/meters")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<MeterResponseDto>> getMeters(Authentication authentication) {
-        String publicId = ((CustomUserPrincipal) authentication.getPrincipal()).getPublicId();
+        String publicId = getPublicId(authentication);
         return ResponseEntity.ok(meterService.getMetersByUserPublicId(publicId));
     }
 
     /**
-     * Get all readings for consumer’s meters
+     * Get all readings
      */
     @GetMapping("/readings")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<MeterReadingDTO>> getReadings(Authentication authentication) {
-        String publicId = ((CustomUserPrincipal) authentication.getPrincipal()).getPublicId();
+        String publicId = getPublicId(authentication);
         return ResponseEntity.ok(meterReadingService.getReadingsByUserPublicId(publicId));
     }
 
     /**
-     * Create a new meter reading and broadcast via WebSocket
+     * Create reading + WebSocket broadcast
      */
     @PostMapping("/readings")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<MeterReadingDTO> createReading(@Valid @RequestBody MeterReadingDTO dto,
-                                                         Authentication authentication) {
-        String publicId = ((CustomUserPrincipal) authentication.getPrincipal()).getPublicId();
-        // Ownership check inside service layer
+    public ResponseEntity<MeterReadingDTO> createReading(
+            @Valid @RequestBody MeterReadingDTO dto,
+            Authentication authentication) {
+
+        String publicId = getPublicId(authentication);
+
         MeterReadingDTO saved = meterReadingService.saveReadingForUser(dto, publicId);
 
-        // Broadcast to WebSocket subscribers
+
         messagingTemplate.convertAndSend("/topic/meter-readings", saved);
 
         return ResponseEntity.ok(saved);
     }
 
     /**
-     * Get bills for consumer’s meters
+     * Get bills
      */
     @GetMapping("/bills")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BillResponseDto>> getBills(Authentication authentication) {
-        String publicId = ((CustomUserPrincipal) authentication.getPrincipal()).getPublicId();
+        String publicId = getPublicId(authentication);
         return ResponseEntity.ok(billService.getBillsByUserPublicId(publicId));
     }
 
     /**
-     * Generate a new bill for consumer’s meter
+     * Create bill
      */
     @PostMapping("/bills")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<BillResponseDto> createBill(@Valid @RequestBody MeterResponseDto meterDto,
-                                                      Authentication authentication) {
-        String publicId = ((CustomUserPrincipal) authentication.getPrincipal()).getPublicId();
-        return ResponseEntity.ok(billService.createBillForUser(meterDto.getPublicId(), publicId));
+    public ResponseEntity<BillResponseDto> createBill(
+            @Valid @RequestBody MeterResponseDto meterDto,
+            Authentication authentication) {
+
+        String publicId = getPublicId(authentication);
+
+        return ResponseEntity.ok(
+                billService.createBillForUser(meterDto.getPublicId(), publicId)
+        );
     }
 }
