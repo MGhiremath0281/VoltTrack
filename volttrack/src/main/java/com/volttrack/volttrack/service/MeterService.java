@@ -5,9 +5,12 @@ import com.volttrack.volttrack.dto.meter.MeterResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface MeterService {
     MeterResponseDto createMeter(MeterRequestDto requestDto);
     Page<MeterResponseDto> getAllMeters(Pageable pageable);
+    List<MeterResponseDto> getMetersByUserPublicId(String publicId);
 
     // Legacy numeric ID methods
     MeterResponseDto getMeterById(Long id);

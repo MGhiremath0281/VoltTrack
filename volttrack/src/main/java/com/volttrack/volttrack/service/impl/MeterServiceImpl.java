@@ -19,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Slf4j
 public class MeterServiceImpl implements MeterService {
@@ -56,6 +58,19 @@ public class MeterServiceImpl implements MeterService {
     @Cacheable(value = "metersList", key = "#pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<MeterResponseDto> getAllMeters(Pageable pageable) {
         return meterRepository.findAll(pageable).map(this::toResponseDto);
+    }
+
+    @Override
+    public List<MeterResponseDto> getMetersByUserPublicId(String publicId) {
+
+        User user = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Meter> meters = meterRepository.findByUser(user);
+
+        return meters.stream()
+                .map(this::toResponseDto)
+                .toList();
     }
 
     @Override
