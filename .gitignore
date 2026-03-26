@@ -16,3 +16,5 @@ logs/
 
 # Shell scripts
 *.sh
+
+*.ps1
