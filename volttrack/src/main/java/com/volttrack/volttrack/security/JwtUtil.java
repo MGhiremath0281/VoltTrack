@@ -9,13 +9,16 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
 
-    private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor("MySuperSecureSecretKeyForJWT1234567890".getBytes());
+    private final SecretKey SECRET_KEY =
+            Keys.hmacShaKeyFor("MySuperSecureSecretKeyForJWT1234567890".getBytes());
+
     private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
 
     public String extractUsername(String token) {
@@ -34,16 +37,26 @@ public class JwtUtil {
                 .getBody();
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
+        return resolver.apply(extractAllClaims(token));
+    }
+
+    public List<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        List<?> roles = claims.get("roles", List.class);
+
+        if (roles == null) return List.of("USER");
+
+        return roles.stream()
+                .map(Object::toString)
+                .toList();
     }
 
     public String generateToken(UserDetails userDetails) {
-        // Store roles as plain strings: ["ADMIN", "OFFICER"]
-        var roles = userDetails.getAuthorities()
+
+        List<String> roles = userDetails.getAuthorities()
                 .stream()
-                .map(auth -> auth.getAuthority().replace("ROLE_", "")) // strip ROLE_ prefix
+                .map(auth -> auth.getAuthority().replace("ROLE_", ""))
                 .collect(Collectors.toList());
 
         return Jwts.builder()
@@ -56,8 +69,7 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        return username.equals(extractUsername(token)) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
