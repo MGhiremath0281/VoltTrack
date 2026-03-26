@@ -1,6 +1,8 @@
 package com.volttrack.volttrack.service.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import com.volttrack.volttrack.entity.enums.BillStatus;
@@ -87,6 +89,60 @@ public class BillServiceImpl implements BillService {
                 );
         billRepository.delete(bill);
         log.info("Bill deleted successfully with publicId={}", publicId);
+    }
+
+    @Override
+    public List<BillResponseDto> getBillsByUserPublicId(String publicId) {
+
+        User user = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Bill> bills = billRepository
+                .findByConsumer_Id(user.getId(), Pageable.unpaged())
+                .getContent();
+
+        return bills.stream()
+                .map(this::toResponseDto)
+                .toList();
+    }
+
+    @Override
+    public BillResponseDto createBillForUser(String meterPublicId, String userPublicId) {
+
+        User user = userRepository.findByPublicId(userPublicId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Meter meter = meterRepository.findByPublicId(meterPublicId)
+                .orElseThrow(() -> new RuntimeException("Meter not found"));
+
+        // 🔐 Ownership check
+        if (!meter.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        MeterReading latest = meterReadingRepository
+                .findTopByMeter_IdOrderByTimestampDesc(meter.getId())
+                .orElseThrow(() -> new RuntimeException("No latest reading"));
+
+        MeterReading first = meterReadingRepository
+                .findTopByMeter_IdOrderByTimestampAsc(meter.getId())
+                .orElseThrow(() -> new RuntimeException("No initial reading"));
+
+        double units = latest.getUnitsConsumed() - first.getUnitsConsumed();
+
+        double rate = 5.0; // 🔧 configurable later
+        double amount = units * rate;
+
+        Bill bill = new Bill();
+        bill.setMeter(meter);
+        bill.setConsumer(user);
+        bill.setUnitsConsumed(units);
+        bill.setTotalAmount(amount);
+        bill.setDueDate(LocalDateTime.now().plusDays(30));
+
+        Bill saved = billRepository.save(bill);
+
+        return toResponseDto(saved);
     }
 
     @Override
