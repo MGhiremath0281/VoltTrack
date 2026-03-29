@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Meter Readings</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <style>
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #999; padding: 6px 12px; text-align: center; }
+        th { background-color: #eee; }
+    </style>
+</head>
+<body>
+
+<h2>WebSocket Meter Readings</h2>
+<button onclick="connect()">Connect</button>
+<button onclick="disconnect()">Disconnect</button>
+
+<table id="readingsTable">
+    <thead>
+        <tr>
+            <th>Public ID</th>
+            <th>Meter ID</th>
+            <th>Pulse Count</th>
+            <th>Voltage</th>
+            <th>Current</th>
+            <th>Units Consumed</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Readings will be inserted here -->
+    </tbody>
+</table>
+
+<script>
+let stompClient = null;
+let subscription = null;
+const displayedIds = new Set(); // Track added publicIds
+
+function connect() {
+    if (stompClient && stompClient.connected) {
+        console.log("Already connected");
+        return;
+    }
+
+    const socket = new SockJS("http://127.0.0.1:8080/ws");
+    stompClient = Stomp.over(socket);
+    stompClient.debug = null; // disable debug logs
+
+    stompClient.connect({}, function(frame) {
+        console.log("✅ Connected:", frame);
+
+        // Unsubscribe previous subscription if exists
+        if (subscription) subscription.unsubscribe();
+
+        subscription = stompClient.subscribe("/topic/meter-readings", function(message) {
+            try {
+                const reading = JSON.parse(message.body);
+
+                // Only add new readings (avoid duplicates)
+                if (!displayedIds.has(reading.publicId)) {
+                    displayedIds.add(reading.publicId);
+                    addReadingToTable(reading);
+                }
+            } catch (e) {
+                console.error("Failed to parse message:", message.body);
+            }
+        });
+    }, function(error) {
+        console.error("❌ Connection failed:", error);
+        setTimeout(() => {
+            console.log("🔁 Retrying connection...");
+            connect();
+        }, 3000);
+    });
+}
+
+function disconnect() {
+    if (subscription) subscription.unsubscribe();
+    if (stompClient) {
+        stompClient.disconnect(() => console.log("🛑 Disconnected"));
+        stompClient = null;
+    }
+    displayedIds.clear();
+    document.querySelector("#readingsTable tbody").innerHTML = "";
+}
+
+function addReadingToTable(reading) {
+    const tableBody = document.querySelector("#readingsTable tbody");
+    const row = document.createElement("tr");
+
+    const cells = [
+        reading.publicId || "-",
+        reading.meterPublicId || "-",
+        reading.pulseCount || "-",
+        reading.voltage || "-",
+        reading.current || "-",
+        reading.unitsConsumed || "-",
+        reading.timestamp ? formatTimestamp(reading.timestamp) : "-"
+    ];
+
+    cells.forEach(text => {
+        const td = document.createElement("td");
+        td.textContent = text;
+        row.appendChild(td);
+    });
+
+    tableBody.appendChild(row);
+
+    // Keep only last 50 readings
+    while (tableBody.rows.length > 50) {
+        const firstRow = tableBody.rows[0];
+        displayedIds.delete(firstRow.cells[0].textContent); // remove ID from Set
+        tableBody.deleteRow(0);
+    }
+}
+
+// Format timestamp from object or ISO string
+function formatTimestamp(ts) {
+    if (!ts) return "-";
+
+    // If it's a string (ISO format)
+    if (typeof ts === "string") return ts;
+
+    // If it's an object with year/month/day/hour/minute/second
+    if (ts.year !== undefined && ts.month !== undefined) {
+        return `${ts.year}-${pad(ts.month)}-${pad(ts.day)} ${pad(ts.hour)}:${pad(ts.minute)}:${pad(ts.second)}`;
+    }
+
+    return "-"; // fallback
+}
+
+function pad(n) { return n.toString().padStart(2, "0"); }
+</script>
+
+</body>
+</html>

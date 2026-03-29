@@ -1,4 +1,4 @@
-$URL = "http://localhost:8080/api/readings"
+$URL = "http://localhost:8080/api/meter-readings"
 
 $PULSE = 1000
 $UNITS = 50.0
@@ -29,7 +29,7 @@ while ($true) {
         Invoke-RestMethod -Uri $URL -Method Post -Body $body -ContentType "application/json"
         Write-Host "Sent -> Pulse: $PULSE | Units: $UNITS | Time: $TIMESTAMP"
     } catch {
-    Write-Host "❌ Error:"
+    Write-Host " Error:"
     Write-Host $_.Exception.Message
     if ($_.Exception.Response -ne $null) {
         $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())

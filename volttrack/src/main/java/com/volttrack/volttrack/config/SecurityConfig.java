@@ -35,7 +35,15 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/readings/**").permitAll()
+                        .requestMatchers("/ws", "/ws/**").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/test.html",
+                                "/js/**",
+                                "/css/**"
+                        ).permitAll()
+                        .requestMatchers("/api/meter-readings/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -46,9 +54,7 @@ public class SecurityConfig {
                 )
 
                 // 🔑 ADD THIS
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-
-                .httpBasic(httpBasic -> {});
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -1,5 +1,6 @@
 package com.volttrack.volttrack.dto.meter;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -31,5 +32,6 @@ public class MeterReadingDTO {
     private Double unitsConsumed;
 
     @NotNull(message = "Timestamp is required")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
 }
