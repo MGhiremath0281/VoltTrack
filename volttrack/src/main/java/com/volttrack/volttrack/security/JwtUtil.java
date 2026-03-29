@@ -4,10 +4,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
@@ -16,10 +18,19 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    private final SecretKey SECRET_KEY =
-            Keys.hmacShaKeyFor("MySuperSecureSecretKeyForJWT1234567890".getBytes());
+    private final SecretKey SECRET_KEY;
+    private final long EXPIRATION_TIME;
 
-    private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
+    public JwtUtil(@Value("${jwt.secret}") String secret,
+                   @Value("${jwt.expiration}") long expirationTime) {
+
+        if (secret.length() < 32) {
+            secret = String.format("%-32s", secret).replace(' ', '0');
+        }
+
+        this.SECRET_KEY = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.EXPIRATION_TIME = expirationTime;
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -44,19 +55,15 @@ public class JwtUtil {
     public List<String> extractRoles(String token) {
         Claims claims = extractAllClaims(token);
         List<?> roles = claims.get("roles", List.class);
-
-        if (roles == null) return List.of("USER");
-
-        return roles.stream()
-                .map(Object::toString)
-                .toList();
+        if (roles == null) return List.of("ROLE_USER");
+        return roles.stream().map(Object::toString).toList();
     }
 
+    // ✅ Keep ROLE_ prefix in JWT
     public String generateToken(UserDetails userDetails) {
-
         List<String> roles = userDetails.getAuthorities()
                 .stream()
-                .map(auth -> auth.getAuthority().replace("ROLE_", ""))
+                .map(auth -> auth.getAuthority()) // keep ROLE_ prefix
                 .collect(Collectors.toList());
 
         return Jwts.builder()
@@ -68,8 +75,9 @@ public class JwtUtil {
                 .compact();
     }
 
-    public boolean validateToken(String token, String username) {
-        return username.equals(extractUsername(token)) && !isTokenExpired(token);
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {

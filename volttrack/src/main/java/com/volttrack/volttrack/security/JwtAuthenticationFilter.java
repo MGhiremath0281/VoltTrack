@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,52 +30,61 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-protected void doFilterInternal(HttpServletRequest request,
-                                HttpServletResponse response,
-                                FilterChain chain) throws ServletException, IOException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/api/auth") ||
+                path.startsWith("/api/meter-readings") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/ws") ||
+                path.startsWith("/html") ||
+                path.startsWith("/v3/api-docs");
+    }
 
-    String path = request.getRequestURI();
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain)
+            throws ServletException, IOException {
 
-    // ✅ SKIP JWT for public endpoints
-    if (path.startsWith("/api/auth") ||
-        path.startsWith("/api/readings") ||
-        path.startsWith("/swagger-ui") ||
-        path.startsWith("/v3/api-docs")) {
+        String path = request.getRequestURI();
+        System.out.println("🔐 JWT Filter applied for: " + path);
+
+        final String authHeader = request.getHeader("Authorization");
+        String username = null;
+        String jwt = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+            try {
+                username = jwtUtil.extractUsername(jwt);
+            } catch (Exception e) {
+                System.out.println("⚠️ Invalid JWT: " + e.getMessage());
+            }
+        }
+
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+
+                if (jwtUtil.validateToken(jwt, userDetails)) {
+                    List<String> roles = jwtUtil.extractRoles(jwt);
+
+                    Collection<SimpleGrantedAuthority> authorities = roles.stream()
+                            .map(SimpleGrantedAuthority::new) // ✅ roles already have ROLE_ prefix
+                            .collect(Collectors.toList());
+
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+
+            } catch (Exception e) {
+                System.out.println("⚠️ JWT validation failed: " + e.getMessage());
+            }
+        }
 
         chain.doFilter(request, response);
-        return;
     }
-
-    final String authHeader = request.getHeader("Authorization");
-    String username = null;
-    String jwt = null;
-
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-        jwt = authHeader.substring(7);
-        username = jwtUtil.extractUsername(jwt);
-    }
-
-    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
-        if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
-            var claims = jwtUtil.extractAllClaims(jwt);
-            List<String> roles = claims.get("roles", List.class);
-
-            Collection<SimpleGrantedAuthority> authorities = roles.stream()
-                    .map(role -> "ROLE_" + role)
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
-
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
-
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-        }
-    }
-
-    chain.doFilter(request, response);
-}
-   
 }

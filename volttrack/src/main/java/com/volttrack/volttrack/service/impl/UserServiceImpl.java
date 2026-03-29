@@ -76,19 +76,23 @@ public class UserServiceImpl implements UserService {
         return toResponseDto(user);
     }
 
+    // Cache the entity instead of DTO
     @Cacheable(value = "users", key = "#publicId")
-    public UserResponseDto getUserByPublicId(String publicId) {
-        log.info("Fetching user with publicId={}", publicId);
-        User user = userRepository.findByPublicId(publicId)
+    public User getUserEntityByPublicId(String publicId) {
+        return userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with publicId: " + publicId));
+    }
+
+    @Override
+    public UserResponseDto getUserByPublicId(String publicId) {
+        User user = getUserEntityByPublicId(publicId);
         return toResponseDto(user);
     }
 
     @CacheEvict(value = "users", key = "#publicId")
     public void deleteUserByPublicId(String publicId) {
         log.info("Deleting user with publicId={}", publicId);
-        User user = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with publicId: " + publicId));
+        User user = getUserEntityByPublicId(publicId);
         userRepository.delete(user);
         log.info("User deleted successfully with publicId={}", publicId);
     }
@@ -141,9 +145,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto approveOfficer(String publicId) {
         log.info("Approving officer with publicId={}", publicId);
 
-        User officer = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Officer not found with publicId: " + publicId));
-
+        User officer = getUserEntityByPublicId(publicId);
         officer.setActive(true);
         User saved = userRepository.save(officer);
 
@@ -157,7 +159,7 @@ public class UserServiceImpl implements UserService {
                 .publicId(user.getPublicId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole().name())
+                .role(user.getRole())
                 .active(user.getActive())
                 .build();
     }

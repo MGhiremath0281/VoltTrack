@@ -1,17 +1,20 @@
 package com.volttrack.volttrack.dto.user;
 
-import lombok.*;
+import com.volttrack.volttrack.entity.enums.Role;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserResponseDto {
     private Long id;
-    private String publicId;  // external role-prefixed id
     private String username;
     private String email;
-    private String role;
+    private Role role;
     private Boolean active;
+    private String publicId;
 }

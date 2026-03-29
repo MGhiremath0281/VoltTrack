@@ -10,7 +10,6 @@ import com.volttrack.volttrack.service.AuthService;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,15 +41,16 @@ public class AuthServiceImpl implements AuthService {
     @CacheEvict(value = "usersByEmail", key = "#requestDto.email")
     public UserResponseDto register(UserRequestDto requestDto) {
 
+        // Convert string role from DTO to enum
         Role roleEnum;
         try {
             roleEnum = Role.valueOf(requestDto.getRole().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid role provided");
+            throw new RuntimeException("Invalid role provided: " + requestDto.getRole());
         }
 
         if (isEmailExists(requestDto.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new RuntimeException("Email already registered: " + requestDto.getEmail());
         }
 
         User user = User.builder()
@@ -64,12 +64,13 @@ public class AuthServiceImpl implements AuthService {
 
         User saved = userRepository.save(user);
 
+        // Build DTO using the actual enum
         return UserResponseDto.builder()
                 .id(saved.getId())
                 .publicId(saved.getPublicId())
                 .username(saved.getUsername())
                 .email(saved.getEmail())
-                .role(saved.getRole().name())
+                .role(saved.getRole())   // ✅ use enum, not String
                 .active(saved.getActive())
                 .build();
     }
@@ -78,11 +79,18 @@ public class AuthServiceImpl implements AuthService {
     @Cacheable(value = "userTokens", key = "#username")
     public String login(String username, String password) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
 
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            UserDetails userDetails = userRepository.findByUsername(username)
+                    .map(user -> org.springframework.security.core.userdetails.User.builder()
+                            .username(user.getUsername())
+                            .password(user.getPassword())
+                            .roles(user.getRole().name()) // Spring expects ROLE_ prefix automatically
+                            .build()
+                    ).orElseThrow(() -> new RuntimeException("User not found: " + username));
+
             return jwtUtil.generateToken(userDetails);
 
         } catch (AuthenticationException e) {
@@ -95,14 +103,12 @@ public class AuthServiceImpl implements AuthService {
         return userRepository.findByEmail(email).isPresent();
     }
 
-
     private String generatePublicId(Role role) {
         String prefix = switch (role) {
             case ADMIN -> "ADM";
             case OFFICER -> "OFF";
             case CONSUMER -> "CON";
         };
-
         return prefix + "-" + UUID.randomUUID().toString().substring(0, 8);
     }
 }
