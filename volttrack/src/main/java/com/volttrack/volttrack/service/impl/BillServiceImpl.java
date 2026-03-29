@@ -1,12 +1,15 @@
 package com.volttrack.volttrack.service.impl;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-
+import com.volttrack.volttrack.dto.bill.BillRequestDto;
+import com.volttrack.volttrack.dto.bill.BillResponseDto;
+import com.volttrack.volttrack.entity.*;
 import com.volttrack.volttrack.entity.enums.BillStatus;
 import com.volttrack.volttrack.entity.enums.BillingCycle;
+import com.volttrack.volttrack.exception.BillingException;
+import com.volttrack.volttrack.exception.ResourceNotFoundException;
+import com.volttrack.volttrack.repository.*;
+import com.volttrack.volttrack.service.BillService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -15,15 +18,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.volttrack.volttrack.dto.bill.BillRequestDto;
-import com.volttrack.volttrack.dto.bill.BillResponseDto;
-import com.volttrack.volttrack.entity.*;
-import com.volttrack.volttrack.exception.BillingException;
-import com.volttrack.volttrack.exception.ResourceNotFoundException;
-import com.volttrack.volttrack.repository.*;
-import com.volttrack.volttrack.service.BillService;
-
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -51,9 +49,7 @@ public class BillServiceImpl implements BillService {
         log.info("Creating bill for meterPublicId={}", requestDto.getMeterPublicId());
 
         Meter meter = meterRepository.findByPublicId(requestDto.getMeterPublicId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Meter not found with publicId: " + requestDto.getMeterPublicId())
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with publicId: " + requestDto.getMeterPublicId()));
 
         User consumer = meter.getUser();
         return generateBill(meter, consumer);
@@ -69,9 +65,7 @@ public class BillServiceImpl implements BillService {
     @Cacheable(value = "billsByPublicId", key = "#publicId")
     public BillResponseDto getBillByPublicId(String publicId) {
         Bill bill = billRepository.findByPublicId(publicId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Bill not found with publicId: " + publicId)
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with publicId: " + publicId));
         return toResponseDto(bill);
     }
 
@@ -84,65 +78,21 @@ public class BillServiceImpl implements BillService {
     })
     public void deleteBillByPublicId(String publicId) {
         Bill bill = billRepository.findByPublicId(publicId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Bill not found with publicId: " + publicId)
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with publicId: " + publicId));
         billRepository.delete(bill);
         log.info("Bill deleted successfully with publicId={}", publicId);
     }
 
     @Override
     public List<BillResponseDto> getBillsByUserPublicId(String publicId) {
-
         User user = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        List<Bill> bills = billRepository
-                .findByConsumer_Id(user.getId(), Pageable.unpaged())
-                .getContent();
+        List<Bill> bills = billRepository.findByConsumer_Id(user.getId(), Pageable.unpaged()).getContent();
 
         return bills.stream()
                 .map(this::toResponseDto)
                 .toList();
-    }
-
-    @Override
-    public BillResponseDto createBillForUser(String meterPublicId, String userPublicId) {
-
-        User user = userRepository.findByPublicId(userPublicId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Meter meter = meterRepository.findByPublicId(meterPublicId)
-                .orElseThrow(() -> new RuntimeException("Meter not found"));
-
-        // 🔐 Ownership check
-        if (!meter.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized");
-        }
-
-        MeterReading latest = meterReadingRepository
-                .findTopByMeter_IdOrderByTimestampDesc(meter.getId())
-                .orElseThrow(() -> new RuntimeException("No latest reading"));
-
-        MeterReading first = meterReadingRepository
-                .findTopByMeter_IdOrderByTimestampAsc(meter.getId())
-                .orElseThrow(() -> new RuntimeException("No initial reading"));
-
-        double units = latest.getUnitsConsumed() - first.getUnitsConsumed();
-
-        double rate = 5.0; // 🔧 configurable later
-        double amount = units * rate;
-
-        Bill bill = new Bill();
-        bill.setMeter(meter);
-        bill.setConsumer(user);
-        bill.setUnitsConsumed(units);
-        bill.setTotalAmount(amount);
-        bill.setDueDate(LocalDateTime.now().plusDays(30));
-
-        Bill saved = billRepository.save(bill);
-
-        return toResponseDto(saved);
     }
 
     @Override
@@ -152,14 +102,10 @@ public class BillServiceImpl implements BillService {
         log.info("Generating bill for consumerPublicId={}", consumerPublicId);
 
         User consumer = userRepository.findByPublicId(consumerPublicId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId)
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
 
         Meter meter = meterRepository.findByUser_Id(consumer.getId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("No meter found for consumerPublicId: " + consumerPublicId)
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("No meter found for consumerPublicId: " + consumerPublicId));
 
         return generateBill(meter, consumer);
     }
@@ -168,48 +114,67 @@ public class BillServiceImpl implements BillService {
     @Cacheable(value = "billsByConsumer", key = "#consumerPublicId + '_' + #pageable.pageNumber")
     public Page<BillResponseDto> getBillsByConsumer(String consumerPublicId, Pageable pageable) {
         User consumer = userRepository.findByPublicId(consumerPublicId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId)
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
 
         return billRepository.findByConsumer_Id(consumer.getId(), pageable)
                 .map(this::toResponseDto);
     }
 
     private BillResponseDto generateBill(Meter meter, User consumer) {
-        MeterReading opening = meterReadingRepository
-                .findTopByMeter_IdOrderByTimestampAsc(meter.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("No readings found for meter"));
+        LocalDateTime now = LocalDateTime.now();
+        
+        // 1. Calculate Billing Cycle Dates (Current Month)
+        LocalDateTime start = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
+        LocalDateTime end = now.withDayOfMonth(now.toLocalDate().lengthOfMonth()).toLocalDate().atTime(23, 59, 59);
 
-        MeterReading closing = meterReadingRepository
-                .findTopByMeter_IdOrderByTimestampDesc(meter.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("No readings found for meter"));
-
-        Double openingReading = opening.getUnitsConsumed();
-        Double closingReading = closing.getUnitsConsumed();
-
-        if (closingReading < openingReading) {
-            throw new BillingException("Closing reading cannot be less than opening reading");
+        // 2. Prevent Duplicate Billing for same cycle
+        Optional<Bill> existing = billRepository.findByMeter_IdAndCycleStartDateAndCycleEndDate(meter.getId(), start, end);
+        if (existing.isPresent()) {
+            log.warn("Bill already exists for meter {} in the current cycle", meter.getPublicId());
+            return toResponseDto(existing.get());
         }
 
-        Double unitsConsumed = closingReading - openingReading;
-        Double baseAmount = unitsConsumed * 5.0;
-        Double fixedCharges = 50.0;
-        Double taxAmount = baseAmount * 0.1;
-        Double totalAmount = baseAmount + fixedCharges + taxAmount;
+        // 3. Determine Opening Reading (Either from last bill's closing or the first ever reading)
+        double openingReadingValue;
+        Optional<Bill> lastBill = billRepository.findTopByMeter_IdOrderByCycleEndDateDesc(meter.getId());
 
-        LocalDateTime now = LocalDateTime.now();
+        if (lastBill.isPresent()) {
+            openingReadingValue = lastBill.get().getClosingReading();
+        } else {
+            openingReadingValue = meterReadingRepository.findTopByMeter_IdOrderByTimestampAsc(meter.getId())
+                    .map(MeterReading::getUnitsConsumed)
+                    .orElseThrow(() -> new BillingException("No initial reading found"));
+        }
+
+        // 4. Get Latest Closing Reading
+        MeterReading latestReading = meterReadingRepository.findTopByMeter_IdOrderByTimestampDesc(meter.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("No readings found for meter: " + meter.getPublicId()));
+
+        double closingReadingValue = latestReading.getUnitsConsumed();
+
+        if (closingReadingValue < openingReadingValue) {
+            throw new BillingException("Closing reading (" + closingReadingValue + ") cannot be less than opening reading (" + openingReadingValue + ")");
+        }
+
+        // 5. Calculate Charges
+        double unitsConsumed = closingReadingValue - openingReadingValue;
+        double baseAmount = unitsConsumed * 5.0; // Rate: 5.0 per unit
+        double fixedCharges = 50.0;
+        double taxAmount = baseAmount * 0.1; // 10% tax
+        double totalAmount = baseAmount + fixedCharges + taxAmount;
+
         String publicId = "BILL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
+        // 6. Build and Save Bill
         Bill bill = Bill.builder()
                 .publicId(publicId)
                 .meter(meter)
                 .consumer(consumer)
                 .billingCycle(BillingCycle.MONTHLY)
-                .cycleStartDate(now.withDayOfMonth(1))
-                .cycleEndDate(now.withDayOfMonth(now.toLocalDate().lengthOfMonth()))
-                .openingReading(openingReading)
-                .closingReading(closingReading)
+                .cycleStartDate(start)
+                .cycleEndDate(end)
+                .openingReading(openingReadingValue)
+                .closingReading(closingReadingValue)
                 .unitsConsumed(unitsConsumed)
                 .baseAmount(baseAmount)
                 .fixedCharges(fixedCharges)
@@ -217,10 +182,11 @@ public class BillServiceImpl implements BillService {
                 .totalAmount(totalAmount)
                 .status(BillStatus.UNPAID)
                 .generatedAt(now)
-                .dueDate(now.plusDays(15))
+                .dueDate(end.plusDays(15))
                 .build();
 
         Bill saved = billRepository.save(bill);
+        log.info("Bill generated successfully with publicId={}", publicId);
         return toResponseDto(saved);
     }
 
@@ -243,5 +209,23 @@ public class BillServiceImpl implements BillService {
                 .generatedAt(bill.getGeneratedAt())
                 .dueDate(bill.getDueDate())
                 .build();
+    }
+    
+    // Note: I consolidated 'createBillForUser' into the 'generateBill' flow 
+    // to maintain consistency and DRY principles.
+    @Override
+    @Transactional
+    public BillResponseDto createBillForUser(String meterPublicId, String userPublicId) {
+        User user = userRepository.findByPublicId(userPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Meter meter = meterRepository.findByPublicId(meterPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found"));
+
+        if (!meter.getUser().getId().equals(user.getId())) {
+            throw new BillingException("Unauthorized: Meter does not belong to user");
+        }
+
+        return generateBill(meter, user);
     }
 }

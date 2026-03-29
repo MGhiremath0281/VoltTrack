@@ -84,14 +84,13 @@ public class ConsumerDashboardController {
 
         MeterReadingDTO saved = meterReadingService.saveReadingForUser(dto, publicId);
 
-
         messagingTemplate.convertAndSend("/topic/meter-readings", saved);
 
         return ResponseEntity.ok(saved);
     }
 
     /**
-     * Get bills
+     * Get ALL bills (history)
      */
     @GetMapping("/bills")
     @PreAuthorize("isAuthenticated()")
@@ -101,18 +100,19 @@ public class ConsumerDashboardController {
     }
 
     /**
-     * Create bill
+     * Get LATEST bill (recommended for UI)
      */
-    @PostMapping("/bills")
+    @GetMapping("/bills/latest")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<BillResponseDto> createBill(
-            @Valid @RequestBody MeterResponseDto meterDto,
-            Authentication authentication) {
-
+    public ResponseEntity<BillResponseDto> getLatestBill(Authentication authentication) {
         String publicId = getPublicId(authentication);
 
-        return ResponseEntity.ok(
-                billService.createBillForUser(meterDto.getPublicId(), publicId)
-        );
+        List<BillResponseDto> bills = billService.getBillsByUserPublicId(publicId);
+
+        if (bills.isEmpty()) {
+            throw new RuntimeException("No bills found");
+        }
+
+        return ResponseEntity.ok(bills.get(bills.size() - 1));
     }
 }
