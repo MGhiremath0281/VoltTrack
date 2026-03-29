@@ -1,8 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Navbar from "./components/Navbar.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx"; // ✅ Import it
 import Home from "./pages/Home.jsx";
-import Login from "./pages/Login.jsx";   // ✅ import the real Login page
+import Login from "./pages/Login.jsx";  
+import ConsumerDashboard from "./pages/ConsumerDashboard.jsx";
 import "./App.css";
 
 // Temporary placeholder for Officer Portal (until you build it)
@@ -23,6 +26,16 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/consumer-login" element={<Login />} />  
             <Route path="/officer-portal" element={<OfficerPortal />} />
+
+            {/* Protected Dashboard Route */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <ConsumerDashboard />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
         </main>
       </div>
