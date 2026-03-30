@@ -1,19 +1,15 @@
+// C:\Users\HP\OneDrive\Desktop\GESCOM\VoltTrack\frontend\src\App.jsx
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx"; // ✅ Import it
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";  
 import ConsumerDashboard from "./pages/ConsumerDashboard.jsx";
+import OfficerDashboard from "./pages/OfficerDashboard.jsx"; // ✅ Import the new dashboard
 import "./App.css";
-
-// Temporary placeholder for Officer Portal (until you build it)
-const OfficerPortal = () => (
-  <div className="p-20 text-center text-2xl">
-    Officer Secure Portal (Coming Soon)
-  </div>
-);
 
 const App = () => {
   return (
@@ -25,9 +21,18 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/consumer-login" element={<Login />} />  
-            <Route path="/officer-portal" element={<OfficerPortal />} />
 
-            {/* Protected Dashboard Route */}
+            {/* Officer Portal now points to the real dashboard */}
+            <Route 
+              path="/officer-portal" 
+              element={
+                <ProtectedRoute>
+                  <OfficerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Consumer Dashboard */}
             <Route 
               path="/dashboard" 
               element={

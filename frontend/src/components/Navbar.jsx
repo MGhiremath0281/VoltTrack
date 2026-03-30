@@ -30,12 +30,12 @@ const Navbar = () => {
             Consumer Login
           </Link>
 
-          {/* Officer Login placeholder */}
-          <Link to="/officer-portal" className="btn-nav-dark">
-            <Shield size={16} />
-            <span>Officer Login</span>
-            <ChevronRight size={14} className="icon-shift" />
-          </Link>
+{/* Officer Login */}
+<Link to="/officer-portal" className="btn-nav-dark">
+  <Shield size={16} />
+  <span>Officer Dashboard</span>
+  <ChevronRight size={14} className="icon-shift" />
+</Link>
         </div>
       </div>
     </nav>
