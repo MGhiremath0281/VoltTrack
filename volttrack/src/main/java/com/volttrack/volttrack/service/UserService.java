@@ -5,6 +5,7 @@ import com.volttrack.volttrack.dto.user.UserResponseDto;
 
 import java.util.List;
 
+import com.volttrack.volttrack.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,4 +19,5 @@ public interface UserService {
     UserResponseDto approveOfficer(String publicId);
     UserResponseDto getUserByPublicId(String publicId);
     void deleteUserByPublicId(String publicId);
+    Page<UserResponseDto> getConsumersByName(String name, Pageable pageable);
 }

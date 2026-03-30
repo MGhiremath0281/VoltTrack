@@ -140,6 +140,13 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByRole(Role.CONSUMER, pageable).map(this::toResponseDto);
     }
 
+    public Page<UserResponseDto> getConsumersByName(String name, Pageable pageable) {
+        Page<User> consumers = userRepository
+                .findByRoleAndUsernameContainingIgnoreCase(Role.CONSUMER, name, pageable);
+
+        return consumers.map(this::toResponseDto);
+    }
+
     @Override
     @CacheEvict(value = "users", key = "#publicId")
     public UserResponseDto approveOfficer(String publicId) {
