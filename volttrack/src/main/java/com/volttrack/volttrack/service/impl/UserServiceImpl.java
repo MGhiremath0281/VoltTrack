@@ -1,21 +1,22 @@
 package com.volttrack.volttrack.service.impl;
 
+import com.volttrack.volttrack.dto.meter.MeterResponseDto;
+import com.volttrack.volttrack.dto.user.UserRequestDto;
+import com.volttrack.volttrack.dto.user.UserResponseDto;
+import com.volttrack.volttrack.entity.User;
+import com.volttrack.volttrack.entity.enums.Role;
+import com.volttrack.volttrack.exception.ResourceNotFoundException;
+import com.volttrack.volttrack.repository.MeterRepository;
+import com.volttrack.volttrack.repository.UserRepository;
+import com.volttrack.volttrack.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import com.volttrack.volttrack.dto.user.UserRequestDto;
-import com.volttrack.volttrack.dto.user.UserResponseDto;
-import com.volttrack.volttrack.entity.enums.Role;
-import com.volttrack.volttrack.entity.User;
-import com.volttrack.volttrack.exception.ResourceNotFoundException;
-import com.volttrack.volttrack.repository.UserRepository;
-import com.volttrack.volttrack.service.UserService;
-
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -23,25 +24,28 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MeterRepository meterRepository; // Added for refresh-proof logic
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder,
+                           MeterRepository meterRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.meterRepository = meterRepository;
     }
 
     @Override
+    @Transactional
     public UserResponseDto createUser(UserRequestDto requestDto) {
-        log.info("Creating new user with username={} and email={}", requestDto.getUsername(), requestDto.getEmail());
+        log.info("Creating new user: {}", requestDto.getUsername());
 
         Role role = Role.valueOf(requestDto.getRole().toUpperCase());
-
-        String prefix;
-        switch (role) {
-            case ADMIN -> prefix = "ADM";
-            case OFFICER -> prefix = "OFF";
-            case CONSUMER -> prefix = "CON";
-            default -> prefix = "USR";
-        }
+        String prefix = switch (role) {
+            case ADMIN -> "ADM";
+            case OFFICER -> "OFF";
+            case CONSUMER -> "CON";
+            default -> "USR";
+        };
 
         long count = userRepository.countByRole(role);
         String publicId = prefix + "-" + (count + 1);
@@ -56,64 +60,39 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User saved = userRepository.save(user);
-        log.info("User created successfully with publicId={}", saved.getPublicId());
-
         return toResponseDto(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UserResponseDto> getAllUsers(Pageable pageable) {
-        log.debug("Fetching all users with pagination");
         return userRepository.findAll(pageable).map(this::toResponseDto);
     }
 
     @Override
     @Cacheable(value = "users", key = "#id")
     public UserResponseDto getUserById(Long id) {
-        log.info("Fetching user with id={}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
         return toResponseDto(user);
     }
 
-    // Cache the entity instead of DTO
     @Cacheable(value = "users", key = "#publicId")
     public User getUserEntityByPublicId(String publicId) {
         return userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with publicId: " + publicId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + publicId));
     }
 
     @Override
     public UserResponseDto getUserByPublicId(String publicId) {
-        User user = getUserEntityByPublicId(publicId);
-        return toResponseDto(user);
-    }
-
-    @CacheEvict(value = "users", key = "#publicId")
-    public void deleteUserByPublicId(String publicId) {
-        log.info("Deleting user with publicId={}", publicId);
-        User user = getUserEntityByPublicId(publicId);
-        userRepository.delete(user);
-        log.info("User deleted successfully with publicId={}", publicId);
+        return toResponseDto(getUserEntityByPublicId(publicId));
     }
 
     @Override
-    @CacheEvict(value = "users", key = "#id")
-    public void deleteUser(Long id) {
-        log.info("Deleting user with id={}", id);
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Cannot delete. User not found with id: " + id);
-        }
-        userRepository.deleteById(id);
-        log.info("User deleted successfully with id={}", id);
-    }
-
-    @Override
+    @Transactional
     public UserResponseDto createConsumerActive(UserRequestDto requestDto) {
-        log.info("Creating consumer with email={}", requestDto.getEmail());
-
         if (userRepository.existsByEmail(requestDto.getEmail())) {
-            throw new IllegalArgumentException("Email already in use: " + requestDto.getEmail());
+            throw new IllegalArgumentException("Email already exists: " + requestDto.getEmail());
         }
 
         long count = userRepository.countByRole(Role.CONSUMER);
@@ -129,38 +108,58 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User saved = userRepository.save(consumer);
-        log.info("Consumer created successfully with publicId={}", saved.getPublicId());
-
         return toResponseDto(saved);
     }
 
     @Override
     public Page<UserResponseDto> getConsumers(Pageable pageable) {
-        log.debug("Fetching all consumers with pagination");
         return userRepository.findByRole(Role.CONSUMER, pageable).map(this::toResponseDto);
     }
 
+    @Override
     public Page<UserResponseDto> getConsumersByName(String name, Pageable pageable) {
-        Page<User> consumers = userRepository
-                .findByRoleAndUsernameContainingIgnoreCase(Role.CONSUMER, name, pageable);
-
-        return consumers.map(this::toResponseDto);
+        return userRepository.findByRoleAndUsernameContainingIgnoreCase(Role.CONSUMER, name, pageable)
+                .map(this::toResponseDto);
     }
 
     @Override
+    @Transactional
     @CacheEvict(value = "users", key = "#publicId")
     public UserResponseDto approveOfficer(String publicId) {
-        log.info("Approving officer with publicId={}", publicId);
-
         User officer = getUserEntityByPublicId(publicId);
         officer.setActive(true);
-        User saved = userRepository.save(officer);
+        return toResponseDto(userRepository.save(officer));
+    }
 
-        log.info("Officer approved successfully with publicId={}", publicId);
-        return toResponseDto(saved);
+    @Override
+    @Transactional
+    @CacheEvict(value = "users", key = "#publicId")
+    public void deleteUserByPublicId(String publicId) {
+        User user = getUserEntityByPublicId(publicId);
+        userRepository.delete(user);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "users", key = "#id")
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) throw new ResourceNotFoundException("User not found");
+        userRepository.deleteById(id);
     }
 
     private UserResponseDto toResponseDto(User user) {
+        // Fetch existing meter from DB
+        var meterData = meterRepository.findByUser(user).stream().findFirst()
+                .map(m -> MeterResponseDto.builder()
+                        .publicId(m.getPublicId())
+                        .meterId(m.getMeterId())
+                        .location(m.getLocation())
+                        .status(m.getStatus())
+                        .billing(m.getBilling())
+                        .userPublicId(user.getPublicId())
+                        .build())
+                .orElse(null);
+
         return UserResponseDto.builder()
                 .id(user.getId())
                 .publicId(user.getPublicId())
@@ -168,6 +167,7 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .active(user.getActive())
+                .meter(meterData)
                 .build();
     }
 }

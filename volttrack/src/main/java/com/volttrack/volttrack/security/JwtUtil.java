@@ -24,6 +24,7 @@ public class JwtUtil {
     public JwtUtil(@Value("${jwt.secret}") String secret,
                    @Value("${jwt.expiration}") long expirationTime) {
 
+        // Ensure the secret key is at least 32 characters for HS256
         if (secret.length() < 32) {
             secret = String.format("%-32s", secret).replace(' ', '0');
         }
@@ -52,24 +53,36 @@ public class JwtUtil {
         return resolver.apply(extractAllClaims(token));
     }
 
+    /**
+     * Safely extracts roles from the JWT claims.
+     */
     public List<String> extractRoles(String token) {
         Claims claims = extractAllClaims(token);
-        List<?> roles = claims.get("roles", List.class);
-        if (roles == null) return List.of("ROLE_USER");
-        return roles.stream().map(Object::toString).toList();
+        Object rolesObject = claims.get("roles");
+
+        if (rolesObject instanceof List<?>) {
+            return ((List<?>) rolesObject).stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toList());
+        }
+        // Return an empty list if no roles found to prevent 403 on valid user checks
+        return List.of();
     }
 
-    // ✅ Keep ROLE_ prefix in JWT
+    /**
+     * Generates a token with roles extracted from UserDetails authorities.
+     * Ensure your CustomUserDetails prepends "ROLE_" to the role names.
+     */
     public String generateToken(UserDetails userDetails) {
         List<String> roles = userDetails.getAuthorities()
                 .stream()
-                .map(auth -> auth.getAuthority()) // keep ROLE_ prefix
+                .map(auth -> auth.getAuthority())
                 .collect(Collectors.toList());
 
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .claim("roles", roles)
-                .setIssuedAt(new Date())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact();
@@ -77,7 +90,7 @@ public class JwtUtil {
 
     public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     private boolean isTokenExpired(String token) {

@@ -7,18 +7,25 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
+/**
+ * Service interface for Meter management.
+ * Optimized for VoltTrack Field Operations.
+ */
 public interface MeterService {
+
     MeterResponseDto createMeter(MeterRequestDto requestDto);
+
     Page<MeterResponseDto> getAllMeters(Pageable pageable);
+
     List<MeterResponseDto> getMetersByUserPublicId(String publicId);
 
-    // Legacy numeric ID methods
     MeterResponseDto getMeterById(Long id);
-    void deleteMeter(Long id);
 
     MeterResponseDto getMeterByPublicId(String publicId);
+
+    void deleteMeter(Long id);
+
     void deleteMeterByPublicId(String publicId);
 
-    // Consumer‑specific methods using publicId
     MeterResponseDto assignMeterToConsumer(String consumerPublicId, MeterRequestDto requestDto);
 }

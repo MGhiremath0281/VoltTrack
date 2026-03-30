@@ -20,20 +20,18 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) {
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found with username: " + username)
-                );
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return new CustomUserDetails(
                 user.getId(),
-                user.getPublicId(),
+                user.getPublicId(),   // ✅ MUST
                 user.getUsername(),
                 user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
-                user.getActive()
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())), // ✅ IMPORTANT
+                user.getActive()      // ✅ MUST
         );
     }
 }

@@ -13,8 +13,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +36,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 path.startsWith("/api/meter-readings") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/ws") ||
-                path.startsWith("/html") ||
                 path.startsWith("/v3/api-docs");
     }
 
@@ -45,9 +44,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain chain)
             throws ServletException, IOException {
-
-        String path = request.getRequestURI();
-        System.out.println("🔐 JWT Filter applied for: " + path);
 
         final String authHeader = request.getHeader("Authorization");
         String username = null;
@@ -58,30 +54,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
-                System.out.println("⚠️ Invalid JWT: " + e.getMessage());
+                logger.error("Could not extract username from token", e);
             }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
+                // 1. Load user from DB
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
+                // 2. Validate token
                 if (jwtUtil.validateToken(jwt, userDetails)) {
-                    List<String> roles = jwtUtil.extractRoles(jwt);
 
-                    Collection<SimpleGrantedAuthority> authorities = roles.stream()
-                            .map(SimpleGrantedAuthority::new) // ✅ roles already have ROLE_ prefix
+                    // 3. FORCE ROLE PREFIXING (The Fix)
+                    // We extract roles from the token directly to ensure we have exactly what was signed
+                    List<String> roles = jwtUtil.extractRoles(jwt); // Ensure your JwtUtil has this method
+
+                    List<SimpleGrantedAuthority> authorities = roles.stream()
+                            .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                            .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
 
+                    // 4. Create Auth token with the prefixed authorities
                     UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    authorities // Use our mapped authorities instead of userDetails.getAuthorities()
+                            );
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // 5. Set the context
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println(" Security Context set for: " + username + " with roles: " + authorities);
                 }
 
             } catch (Exception e) {
-                System.out.println("⚠️ JWT validation failed: " + e.getMessage());
+                logger.error("Authentication failed", e);
             }
         }
 

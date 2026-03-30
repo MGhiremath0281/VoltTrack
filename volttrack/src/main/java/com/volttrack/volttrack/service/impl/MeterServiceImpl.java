@@ -43,10 +43,40 @@ public class MeterServiceImpl implements MeterService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found with publicId: " + requestDto.getUserPublicId()));
 
+        return createAndSaveMeter(user, requestDto);
+    }
+
+    /**
+     * ✅ REFRESH-PROOF ASSIGNMENT
+     * Checks if a meter exists before creating a new one.
+     */
+    @Override
+    @Transactional
+    @CacheEvict(value = "metersList", allEntries = true)
+    public MeterResponseDto assignMeterToConsumer(String consumerPublicId, MeterRequestDto requestDto) {
+        log.info("Attempting to assign meter to consumer={}", consumerPublicId);
+
+        User consumer = userRepository.findByPublicId(consumerPublicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
+
+        // 1. Check if a meter is already linked to this User
+        List<Meter> existingMeters = meterRepository.findByUser(consumer);
+
+        if (!existingMeters.isEmpty()) {
+            log.warn("Consumer {} already has a meter assigned. Returning existing data.", consumerPublicId);
+            // Return the first existing meter found
+            return toResponseDto(existingMeters.get(0));
+        }
+
+        // 2. If no existing meter, proceed with creation
+        return createAndSaveMeter(consumer, requestDto);
+    }
+
+    private MeterResponseDto createAndSaveMeter(User user, MeterRequestDto requestDto) {
         Meter meter = Meter.builder()
                 .location(requestDto.getLocation())
                 .user(user)
-                .status(requestDto.getStatus())
+                .status(requestDto.getStatus() != null ? requestDto.getStatus() : Status.ONLINE)
                 .billing(requestDto.getBilling())
                 .build();
 
@@ -62,13 +92,10 @@ public class MeterServiceImpl implements MeterService {
 
     @Override
     public List<MeterResponseDto> getMetersByUserPublicId(String publicId) {
-
         User user = userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with publicId: " + publicId));
 
-        List<Meter> meters = meterRepository.findByUser(user);
-
-        return meters.stream()
+        return meterRepository.findByUser(user).stream()
                 .map(this::toResponseDto)
                 .toList();
     }
@@ -97,7 +124,7 @@ public class MeterServiceImpl implements MeterService {
     })
     public void deleteMeterByPublicId(String publicId) {
         Meter meter = meterRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Meter not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Meter not found with publicId: " + publicId));
         meterRepository.delete(meter);
     }
 
@@ -109,28 +136,9 @@ public class MeterServiceImpl implements MeterService {
     })
     public void deleteMeter(Long id) {
         if (!meterRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Meter not found");
+            throw new ResourceNotFoundException("Meter not found with id: " + id);
         }
         meterRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "metersList", allEntries = true)
-    public MeterResponseDto assignMeterToConsumer(String consumerPublicId, MeterRequestDto requestDto) {
-        User consumer = userRepository.findByPublicId(consumerPublicId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Consumer not found with publicId: " + consumerPublicId));
-
-        Meter meter = Meter.builder()
-                .location(requestDto.getLocation())
-                .user(consumer)
-                .status(Status.ONLINE)
-                .billing(requestDto.getBilling())
-                .build();
-
-        Meter saved = meterRepository.save(meter);
-        return toResponseDto(saved);
     }
 
     private MeterResponseDto toResponseDto(Meter meter) {

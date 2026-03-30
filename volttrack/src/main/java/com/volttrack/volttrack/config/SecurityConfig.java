@@ -3,14 +3,13 @@ package com.volttrack.volttrack.config;
 import com.volttrack.volttrack.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -22,7 +21,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -34,24 +33,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Enable CORS with our configuration
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // Disable CSRF for stateless APIs
-                .csrf(csrf -> csrf.disable())
-                // Stateless session management (REST API)
+                .csrf(csrf -> csrf.disable()) // Required for non-browser clients/React
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        // Allow pre-flight OPTIONS requests
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                        // Public endpoints
+                        // 1. Allow login and registration without a token
                         .requestMatchers("/api/auth/**").permitAll()
+
+                        // 2. Swagger and WebSockets
                         .requestMatchers("/ws/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/meter-readings").permitAll()
-                        // All other endpoints require authentication
+
+                        // 3. IoT Meter endpoint
+                        .requestMatchers(HttpMethod.POST, "/api/meter-readings").permitAll()
+
+                        // 4. Role-based protection for Officer endpoints
+                        .requestMatchers("/api/officer/**").hasAnyRole("OFFICER", "ADMIN")
+
+                        // 5. Require auth for everything else
                         .anyRequest().authenticated()
                 )
-                // Add JWT filter before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -60,11 +60,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // React frontend URL (adjust port if needed)
-        config.setAllowedOriginPatterns(List.of("http://localhost:5173"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Specify allowed headers your frontend will send
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedOrigins(List.of("http://localhost:5173")); // Vite dev server
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -72,7 +71,6 @@ public class SecurityConfig {
         return source;
     }
 
-    // Expose AuthenticationManager bean
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
