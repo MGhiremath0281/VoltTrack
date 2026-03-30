@@ -1,5 +1,6 @@
 package com.volttrack.volttrack.dto.user;
 
+import com.volttrack.volttrack.dto.meter.MeterResponseDto;
 import com.volttrack.volttrack.entity.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,4 +18,5 @@ public class UserResponseDto {
     private Role role;
     private Boolean active;
     private String publicId;
+    private MeterResponseDto meter;
 }
