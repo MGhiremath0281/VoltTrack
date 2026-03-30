@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/officer")
-@PreAuthorize("hasRole('OFFICER')")
+@PreAuthorize("hasAnyRole('OFFICER', 'ROLE_OFFICER') or hasAnyAuthority('OFFICER', 'ROLE_OFFICER')")
 public class OfficerController {
 
     private final UserService userService;
@@ -49,6 +49,10 @@ public class OfficerController {
     @GetMapping("/me")
     public ResponseEntity<UserResponseDto> getLoggedInOfficer(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
 
         return ResponseEntity.ok(
                 userService.getUserByPublicId(userDetails.getPublicId())

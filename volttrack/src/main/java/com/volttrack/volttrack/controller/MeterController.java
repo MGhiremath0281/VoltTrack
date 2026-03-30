@@ -27,6 +27,19 @@ public class MeterController {
         return ResponseEntity.ok(meterService.createMeter(requestDto));
     }
 
+    // Add this to your MeterController.java
+
+    @Operation(summary = "Assign meter to consumer", description = "Checks if meter exists, if not, creates one.")
+    @PostMapping("/assign/{consumerPublicId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER')")
+    public ResponseEntity<?> assignMeterToConsumer(
+            @PathVariable String consumerPublicId,
+            @Valid @RequestBody MeterRequestDto requestDto) {
+
+        // We use a custom response or check in the service to return 409 if exists
+        return ResponseEntity.ok(meterService.assignMeterToConsumer(consumerPublicId, requestDto));
+    }
+
     @Operation(summary = "Get all meters", description = "Retrieve all meters (paginated).")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','OFFICER')")
