@@ -11,6 +11,8 @@ import Login from "./pages/Login.jsx";
 import ConsumerDashboard from "./pages/ConsumerDashboard.jsx";
 import OfficerDashboard from "./pages/OfficerDashboard.jsx"; 
 import OfficerLogin from "./pages/OfficerLogin.jsx";
+import AdminLogin from "./pages/AdminLogin.jsx";       // NEW
+import AdminDashboard from "./pages/AdminDashboard.jsx"; // NEW
 
 import "./App.css";
 
@@ -20,9 +22,9 @@ const PublicRoute = ({ children }) => {
   const role = localStorage.getItem("userRole");
 
   if (token) {
-    return role === "OFFICER" 
-      ? <Navigate to="/officer-portal" replace /> 
-      : <Navigate to="/dashboard" replace />;
+    if (role === "OFFICER") return <Navigate to="/officer-portal" replace />;
+    if (role === "ADMIN") return <Navigate to="/admin-dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   return children;
 };
@@ -47,7 +49,11 @@ const App = () => {
               path="/officer-login" 
               element={<PublicRoute><OfficerLogin /></PublicRoute>} 
             />
-            
+            <Route 
+              path="/admin-login" 
+              element={<PublicRoute><AdminLogin /></PublicRoute>} 
+            />
+
             {/* Redirect generic /login to consumer login */}
             <Route path="/login" element={<Navigate to="/consumer-login" replace />} />
 
@@ -67,6 +73,16 @@ const App = () => {
               element={
                 <ProtectedRoute requiredRole="CONSUMER">
                   <ConsumerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* --- Protected Admin Portal --- */}
+            <Route 
+              path="/admin-dashboard" 
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <AdminDashboard />
                 </ProtectedRoute>
               } 
             />
