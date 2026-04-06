@@ -19,4 +19,9 @@ public class UserResponseDto {
     private Boolean active;
     private String publicId;
     private MeterResponseDto meter;
+
+    // New fields for officer management
+    private Long approvedBy;   // ID of sub-district officer who approved
+    private Boolean rejected;  // flag if registration was rejected
+    private Long suspendedBy;  // ID of sub-district officer who suspended
 }

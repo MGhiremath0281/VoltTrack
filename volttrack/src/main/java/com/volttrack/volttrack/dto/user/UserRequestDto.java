@@ -25,4 +25,9 @@ public class UserRequestDto {
     private String role;
 
     private Boolean active;
+
+    // New fields for officer onboarding
+    private Long approvedBy;   // ID of sub-district officer who approved
+    private Boolean rejected;  // flag if registration was rejected
+    private Long suspendedBy;  // ID of sub-district officer who suspended
 }
