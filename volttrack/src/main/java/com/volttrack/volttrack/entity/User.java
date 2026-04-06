@@ -47,6 +47,10 @@ public class User {
     @JoinColumn(name = "sub_district_officer_id")
     private User subDistrictOfficer;
 
+    @ManyToOne
+    @JoinColumn(name = "sub_district_id")
+    private SubDistrict subDistrict;
+
     @PrePersist
     public void generatePublicId() {
         if (this.publicId == null) {
