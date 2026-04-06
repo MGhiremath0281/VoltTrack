@@ -38,6 +38,15 @@ public class User {
     @Column(unique = true, nullable = false)
     private String publicId;
 
+    private Long approvedBy;   // ID of sub-district officer who approved
+    private Boolean rejected;  // flag for rejection
+    private Long suspendedBy;  // ID of sub-district officer who suspended
+
+    // NEW: Relationship to Sub-District Officer
+    @ManyToOne
+    @JoinColumn(name = "sub_district_officer_id")
+    private User subDistrictOfficer;
+
     @PrePersist
     public void generatePublicId() {
         if (this.publicId == null) {
