@@ -14,8 +14,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
 import java.util.UUID;
 
 @Service
@@ -47,12 +47,10 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid role provided: " + requestDto.getRole());
         }
 
-        // 2. CRITICAL: Check for duplicate Email AND Username
+        // 2. Check for duplicate Email AND Username
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered: " + requestDto.getEmail());
         }
-
-        // This check prevents the "2 results returned" Hibernate crash
         if (userRepository.findByUsername(requestDto.getUsername()).isPresent()) {
             throw new RuntimeException("Username already taken: " + requestDto.getUsername());
         }
@@ -79,7 +77,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-// Remove @Cacheable for now—tokens change every login, so caching them is usually a bad idea
     public AuthResponse login(String username, String password) {
         try {
             authenticationManager.authenticate(
@@ -96,7 +93,6 @@ public class AuthServiceImpl implements AuthService {
 
                         String token = jwtUtil.generateToken(userDetails);
 
-                        // Return the DTO that React is expecting
                         return new AuthResponse(token, user.getRole().name());
                     })
                     .orElseThrow(() -> new RuntimeException("User not found after auth: " + username));
@@ -105,11 +101,14 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid username or password");
         }
     }
+
     private String generatePublicId(Role role) {
         String prefix = switch (role) {
             case ADMIN -> "ADM";
             case OFFICER -> "OFF";
             case CONSUMER -> "CON";
+            case SUB_DISTRICT_OFFICER -> "SDO";
+            default -> "USR"; // fallback for future roles
         };
         return prefix + "-" + UUID.randomUUID().toString().substring(0, 8);
     }
