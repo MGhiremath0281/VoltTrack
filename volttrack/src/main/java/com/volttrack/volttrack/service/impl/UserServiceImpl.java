@@ -146,6 +146,56 @@ public class UserServiceImpl implements UserService {
         if (!userRepository.existsById(id)) throw new ResourceNotFoundException("User not found");
         userRepository.deleteById(id);
     }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserResponseDto> getPendingOfficers(Pageable pageable) {
+        return userRepository.findByRoleAndActive(Role.OFFICER, false, pageable)
+                .map(this::toResponseDto);
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto approveOfficerBySubDistrict(String publicId, Long approverId) {
+        User officer = getUserEntityByPublicId(publicId);
+        officer.setActive(true);
+        officer.setApprovedBy(approverId); // new field in User entity
+        return toResponseDto(userRepository.save(officer));
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto rejectOfficerBySubDistrict(String publicId, Long approverId) {
+        User officer = getUserEntityByPublicId(publicId);
+        officer.setActive(false);
+        officer.setApprovedBy(approverId);
+        officer.setRejected(true); // add a flag in User entity
+        return toResponseDto(userRepository.save(officer));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserResponseDto> getOfficersInSubDistrict(Long subDistrictOfficerId, Pageable pageable) {
+        return userRepository.findByApprovedBy(subDistrictOfficerId, pageable)
+                .map(this::toResponseDto);
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto suspendOfficer(String publicId, Long approverId) {
+        User officer = getUserEntityByPublicId(publicId);
+        officer.setActive(false);
+        officer.setSuspendedBy(approverId); // new field in User entity
+        return toResponseDto(userRepository.save(officer));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserResponseDto> getSubDistrictCustomerReport(Long subDistrictOfficerId, Pageable pageable) {
+        // Fetch all consumers linked to officers approved by this sub-district officer
+        return userRepository.findConsumersBySubDistrictOfficer(subDistrictOfficerId, pageable)
+                .map(this::toResponseDto);
+    }
+
 
     private UserResponseDto toResponseDto(User user) {
         // Fetch existing meter from DB

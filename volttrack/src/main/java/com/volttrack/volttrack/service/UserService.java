@@ -20,4 +20,11 @@ public interface UserService {
     UserResponseDto getUserByPublicId(String publicId);
     void deleteUserByPublicId(String publicId);
     Page<UserResponseDto> getConsumersByName(String name, Pageable pageable);
+    Page<UserResponseDto> getPendingOfficers(Pageable pageable);
+    UserResponseDto approveOfficerBySubDistrict(String publicId, Long approverId);
+    UserResponseDto rejectOfficerBySubDistrict(String publicId, Long approverId);
+    Page<UserResponseDto> getOfficersInSubDistrict(Long subDistrictOfficerId, Pageable pageable);
+    UserResponseDto suspendOfficer(String publicId, Long approverId);
+    Page<UserResponseDto> getSubDistrictCustomerReport(Long subDistrictOfficerId, Pageable pageable);
+
 }
